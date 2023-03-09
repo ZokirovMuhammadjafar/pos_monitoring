@@ -9,8 +9,4 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class MachineHistoryServiceImpl implements MachineHistoryService {
     private final MachineHistoryRepository machineHistoryRepository;
-    @Override
-    public void synchronize() {
-
-    }
 }

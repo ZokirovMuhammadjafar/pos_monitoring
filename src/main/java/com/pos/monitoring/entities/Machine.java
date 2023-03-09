@@ -1,5 +1,6 @@
 package com.pos.monitoring.entities;
 
+import com.pos.monitoring.dtos.enums.MachineModel;
 import com.pos.monitoring.dtos.enums.MachineState;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -8,6 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.postgresql.shaded.com.ongres.scram.common.bouncycastle.pbkdf2.Mac;
 
 @Getter
 @Setter
@@ -31,6 +33,8 @@ public class Machine extends AbstractEntity {
     protected String merchantId;
     @Column
     protected String terminalId;
+    @Enumerated(EnumType.ORDINAL)
+    protected MachineModel model;
     @Enumerated(EnumType.ORDINAL)
     protected MachineState state;
 }
