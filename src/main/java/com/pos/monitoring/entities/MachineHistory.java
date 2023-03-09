@@ -8,28 +8,24 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+@Entity
 @Getter
 @Setter
-@Entity
 @DynamicInsert
 @DynamicUpdate
 @NoArgsConstructor
-@Table(name = "machines")
-public class Machine extends AbstractEntity {
+@Table(name = "machine_history")
+public class MachineHistory extends AbstractEntity{
     @Column
     protected String srNumber;
     @Column
-    protected String instId;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "branch_id")
-    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    protected Branch branch;
+    protected String toInstId;
     @Column
-    protected String branchMfo;
+    protected String fromInstId;
     @Column
     protected String merchantId;
     @Column
     protected String terminalId;
+    @Enumerated(EnumType.ORDINAL)
     protected State state;
-
 }

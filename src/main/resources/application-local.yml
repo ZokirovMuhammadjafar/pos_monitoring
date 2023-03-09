@@ -1,0 +1,8 @@
+server:
+  port: 9091
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pos-monitoring
+    username: postgres
+    password: postgres

@@ -13,8 +13,7 @@ import java.util.Objects;
 @Setter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public class AbstractEntity implements Serializable {
-
+public abstract class AbstractEntity implements Serializable {
     @Temporal(value = TemporalType.TIMESTAMP)
     protected Date createDate = new Date();
     @Temporal(value = TemporalType.TIMESTAMP)

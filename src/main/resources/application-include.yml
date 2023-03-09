@@ -1,0 +1,38 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimumIdle: 0
+      maximumPoolSize: 15
+      idleTimeout: 30000
+      maxLifetime: 60000
+      leakDetectionThreshold: 18000
+      connectionTimeout: 120000
+      transaction-isolation: 2
+      auto-commit: false
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      jakarta:
+        persistence:
+          sharedCache:
+            mode: ALL
+      jdbc:
+        lob:
+          non_contextual_creation: true
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        enable_lazy_load_no_trans: true
+    open-in-view: true
+  main:
+    lazy-initialization: false
+
+pos:
+  monitoring:
+    user:
+      username: sysAdmin
+      password: qwedyetyer123124_=
+    login:
+      url: http://localhost:8080/api/authenticate
