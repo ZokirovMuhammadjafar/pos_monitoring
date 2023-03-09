@@ -1,5 +1,6 @@
 package com.pos.monitoring.entities;
 
+import com.pos.monitoring.dtos.enums.MachineState;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,6 @@ public class Machine extends AbstractEntity {
     protected String merchantId;
     @Column
     protected String terminalId;
-    protected State state;
-
+    @Enumerated(EnumType.ORDINAL)
+    protected MachineState state;
 }
