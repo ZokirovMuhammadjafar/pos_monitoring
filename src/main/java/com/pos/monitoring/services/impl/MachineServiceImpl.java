@@ -61,12 +61,14 @@ public class MachineServiceImpl implements MachineService {
             } else {
                 Machine oldMachine = machineRepository.findBySrNumber(machine.getSrNumber());
                 if (oldMachine != null && !oldMachine.getInstId().equals(machine.getInstId())) {
+                    machine=oldMachine;
                     MachineHistory newMachineHistory = machineHistoryService.createChangeInst(oldMachine, machine);
                 } else {
                     if (oldMachine == null) {
-                        Machine newMachine = createMachine(machine);
+                         machine = createMachine(machine);
                     } else {
                         if (!oldMachine.getBranchMfo().equals(machine.getBranchMfo())) {
+                            machine=oldMachine;
                             machineHistoryService.createChangeMfo(oldMachine,machine);
                         }
                     }
@@ -75,6 +77,7 @@ public class MachineServiceImpl implements MachineService {
         } else {
             machine.setState(MachineState.HAS_NO_USED);
         }
+        machineRepository.save(machine);
     }
 
     private Machine createMachine(Machine machine) {
