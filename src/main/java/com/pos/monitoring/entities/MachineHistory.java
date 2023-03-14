@@ -22,6 +22,10 @@ public class MachineHistory extends AbstractEntity {
     protected String toInstId;
     @Column
     protected String fromInstId;
+    @Column
+    protected String toMfo;
+    @Column
+    protected String fromMfo;
     @Enumerated(EnumType.ORDINAL)
     protected MachineHistoryState state;
 }

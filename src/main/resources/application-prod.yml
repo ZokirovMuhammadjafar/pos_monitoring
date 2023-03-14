@@ -6,3 +6,10 @@ spring:
     url: jdbc:postgresql://localhost:5432/pos-monitoring
     username: postgres
     password: postgres
+
+8005:
+  connection-db:
+    url: jdbc:postgresql://localhost:5432/7005
+    username: postgres
+    password: postgres
+    driver: org.postgresql.Driver

@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BranchRepository extends SoftDeleteJpaRepository<Branch> {
 
+    Branch findByMfoAndDeleted(String mfo, boolean deleted);
 }

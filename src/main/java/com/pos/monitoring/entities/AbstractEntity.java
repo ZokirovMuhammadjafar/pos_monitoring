@@ -23,7 +23,6 @@ public abstract class AbstractEntity implements Serializable {
     private Long id;
     @Column(name = "deleted", columnDefinition = "boolean default false")
     private boolean deleted;
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -31,7 +30,6 @@ public abstract class AbstractEntity implements Serializable {
         AbstractEntity entity = (AbstractEntity) o;
         return Objects.equals(id, entity.id);
     }
-
     @Override
     public int hashCode() {
         return Objects.hash(id);

@@ -29,13 +29,6 @@ spring:
   main:
     lazy-initialization: false
 
-8005:
-  connection-db:
-    url: jdbc:postgresql://localhost:5432/7005
-    username: postgres
-    password: postgres
-    driver: org.postgresql.Driver
-
 pos:
   monitoring:
     user:

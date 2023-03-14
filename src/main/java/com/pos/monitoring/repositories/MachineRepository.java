@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
 
+
+    Machine findBySrNumber(String srNumber);
 }
