@@ -19,6 +19,7 @@ import java.util.Map;
 public class TerminalModel extends AbstractEntity {
     private String name;
 
+    @Column(unique = true,nullable = false)
     private String prefix;
     private Boolean valid=Boolean.FALSE;
 }

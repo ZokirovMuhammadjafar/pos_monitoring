@@ -4,10 +4,10 @@ spring:
     hikari:
       minimumIdle: 0
       maximumPoolSize: 15
-      idleTimeout: 30000
-      maxLifetime: 60000
-      leakDetectionThreshold: 18000
-      connectionTimeout: 120000
+      idleTimeout: 30000000
+      maxLifetime: 60000000
+      leakDetectionThreshold: 18000000
+      connectionTimeout: 120000000
       transaction-isolation: 2
       auto-commit: false
   jpa:

@@ -34,5 +34,22 @@ public class Machine extends AbstractEntity {
     protected String prefix;
     protected Boolean isContract = false;
     @Enumerated(EnumType.ORDINAL)
-    protected MachineState state;
+    protected MachineState state=MachineState.HAS_ERROR;
+
+    @Override
+    public String
+
+
+    toString() {
+        return "Machine{" +
+                "srNumber='" + srNumber + '\'' +
+                ", instId='" + instId + '\'' +
+                ", branchMfo='" + branchMfo + '\'' +
+                ", merchantId='" + merchantId + '\'' +
+                ", terminalId='" + terminalId + '\'' +
+                ", prefix='" + prefix + '\'' +
+                ", isContract=" + isContract +
+                ", state=" + state +
+                '}';
+    }
 }

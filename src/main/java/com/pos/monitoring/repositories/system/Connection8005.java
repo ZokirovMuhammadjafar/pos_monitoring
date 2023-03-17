@@ -68,13 +68,12 @@ public class Connection8005 {
     }
 
     @SneakyThrows
-    public List<Machine> getAllMachinesFirst() {
-        if (ObjectUtils.isEmpty(connection)) {
-            getConnection();
-        }
+    public List<Machine> getAllMachinesFirst(int a) {
+        getConnection();
         PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_ALL_MACHINES_FIRST);
-        getResultQuery(preparedStatement);
-        return null;
+        preparedStatement.setInt(1,a);
+        List<Map<String, Object>> list = getResultQuery(preparedStatement);
+        return ClassToMapUtils.mapToClassList(list,Machine.class);
     }
 
 

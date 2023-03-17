@@ -13,6 +13,9 @@ class PosMonitoringApplicationTests {
 	private Connection8005 connection8005;
 	@Autowired
 	private JobService  jobService;
+
+//
+
 	@Test
 	void contextLoads() {
 
@@ -26,5 +29,6 @@ class PosMonitoringApplicationTests {
 	void machineTestUpdate(){
 		jobService.synchronizeMachine();
 	}
+
 
 }

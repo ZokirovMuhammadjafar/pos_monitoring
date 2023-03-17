@@ -5,6 +5,7 @@ import com.pos.monitoring.services.MachineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,9 +22,10 @@ public class JobService {
     }
 
     @Scheduled(cron = "0 * * * *")
+    @Transactional
     public void synchronizeMachine() {
         System.out.println("------------ Machines start synchronization------------");
-        machineService.synchronize();
+            machineService.synchronize();
         System.out.println("------------ Machines end synchronization------------");
     }
 }

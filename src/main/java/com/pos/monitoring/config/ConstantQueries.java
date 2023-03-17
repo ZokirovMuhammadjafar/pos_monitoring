@@ -32,7 +32,6 @@ public class ConstantQueries {
                                                              where m.state <> 2
                                                                and m.type_id = 6
                                                                and bank_code not in ('9006', '9004', '9002')
-                                                             offset 200000 limit 1000) as t;
-                                                       
+                                                             offset ? limit 300) as t
             """;
 }
