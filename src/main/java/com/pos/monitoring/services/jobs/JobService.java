@@ -25,7 +25,7 @@ public class JobService {
     @Transactional
     public void synchronizeMachine() {
         System.out.println("------------ Machines start synchronization------------");
-            machineService.synchronize();
+        machineService.synchronize();
         System.out.println("------------ Machines end synchronization------------");
     }
 }

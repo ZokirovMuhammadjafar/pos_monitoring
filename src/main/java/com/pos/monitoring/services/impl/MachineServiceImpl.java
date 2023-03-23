@@ -1,6 +1,6 @@
 package com.pos.monitoring.services.impl;
 
-import com.pos.monitoring.dtos.enums.MachineState;
+import com.pos.monitoring.entities.MachineState;
 import com.pos.monitoring.entities.Branch;
 import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.entities.TerminalModel;
@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @RequiredArgsConstructor
@@ -54,15 +53,14 @@ public class MachineServiceImpl implements MachineService {
         }
     }
 
-    /**
-     * this function change state
-     *
-     * @param machine finally machine will be saved with change
-     */
+    @Override
+    public void deleteByPrefix(String prefix) {
+        machineRepository.deleteByPrefix(prefix);
+    }
 
     private void stateChoose(Machine machine) {
         TerminalModel validPrefix = terminalModelRepository.findByPrefixAndDeleted(machine.getPrefix(), false);
-        Machine oldMachine = machineRepository.findBySrNumber(machine.getSrNumber());
+        Machine oldMachine = machineRepository.findBySrNumberAndDeleted(machine.getSrNumber(),false);
         if (validPrefix == null) {
             // TODO: 3/14/2023 telegramga log tashlash kerak
             System.out.println(machine.getPrefix());

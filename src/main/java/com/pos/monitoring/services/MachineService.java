@@ -6,4 +6,6 @@ public interface MachineService {
      * update comes every day
      */
     void synchronize();
+
+    void deleteByPrefix(String prefix);
 }

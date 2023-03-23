@@ -1,4 +1,4 @@
-package com.pos.monitoring.dtos.enums;
+package com.pos.monitoring.entities;
 
 public enum MachineHistoryState {
     CHANGE_MFO,

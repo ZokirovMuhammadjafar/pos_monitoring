@@ -1,6 +1,6 @@
 package com.pos.monitoring.services.impl;
 
-import com.pos.monitoring.dtos.enums.MachineHistoryState;
+import com.pos.monitoring.entities.MachineHistoryState;
 import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.entities.MachineHistory;
 import com.pos.monitoring.repositories.MachineHistoryRepository;
