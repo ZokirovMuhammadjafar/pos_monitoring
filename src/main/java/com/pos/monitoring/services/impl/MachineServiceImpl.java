@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @RequiredArgsConstructor
@@ -37,12 +38,14 @@ public class MachineServiceImpl implements MachineService {
             if (branchMfo != null) {
                 Branch branch = branchRepository.findByMfoAndDeleted(branchMfo, false);
                 if (branch == null) {
+                    System.out.println("branch topilmadi  ===  >>>"+branchMfo);
                     // TODO: 3/13/2023 shuni telegram bot orqali jonatib qoyish kerak mfo tid mid
                     continue;
                 }
                 machine.setBranch(branch);
             }
             if (machine.getSrNumber() != null && machine.getSrNumber().length() <= 3) {
+                System.err.println("mavhinada xatolik ===>>>>   "+machine.toString());
                 // TODO: 3/13/2023 shuni telegramga tashlab qoyish kerak branch va tid mid sr
                 continue;
             }
@@ -60,15 +63,14 @@ public class MachineServiceImpl implements MachineService {
     private void stateChoose(Machine machine) {
         TerminalModel validPrefix = terminalModelRepository.findByPrefixAndDeleted(machine.getPrefix(), false);
         Machine oldMachine = machineRepository.findBySrNumber(machine.getSrNumber());
+        if (validPrefix == null) {
+            // TODO: 3/14/2023 telegramga log tashlash kerak
+            System.out.println(machine.getPrefix());
+            return;
+        }
         if (oldMachine == null) {
-            if (validPrefix == null) {
-                // TODO: 3/14/2023 telegramga log tashlash kerak
-                System.out.println(machine.getPrefix());
-                return;
-            }
             if (machine.getIsContract()) {
                 if (machine.getTerminalId() != null && machine.getMerchantId() != null && machine.getInstId() != null) {
-
                     if (validPrefix.getValid()) {
                         machine.setState(MachineState.HAS_CONTRACT_WITH_7003);
                     } else {
@@ -80,75 +82,86 @@ public class MachineServiceImpl implements MachineService {
                     } else {
                         machine.setState(MachineState.HAS_CONTRACT_NOT_7003);
                     }
-
                 }
             } else {
                 if (machine.getTerminalId() != null && machine.getMerchantId() != null && machine.getInstId() != null) {
-                    if (validPrefix != null) {
-                        if (validPrefix.getValid()) {
-                            machine.setState(MachineState.HAS_NOT_CONTRACT_WORKING_7003);
-                        } else {
-                            machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
-                        }
+                    if (validPrefix.getValid()) {
+                        machine.setState(MachineState.HAS_NOT_CONTRACT_WORKING_7003);
                     } else {
-                        System.out.println(machine.getPrefix());
-                        // TODO: 3/14/2023 log tashlash kerak telegramga
-                        return;
+                        machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
                     }
                 } else if (machine.getTerminalId() == null && machine.getMerchantId() == null && machine.getInstId() != null) {
-                    if (validPrefix != null) {
-                        if (validPrefix.getValid()) {
-                            machine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
-                        } else {
-                            machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
-                        }
+                    if (validPrefix.getValid()) {
+                        machine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
                     } else {
-                        System.out.println(machine.getPrefix());
-                        // TODO: 3/14/2023 log tashlash kerak telegramga
-                        return;
+                        machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
                     }
                 }
-
             }
             machineRepository.save(machine);
         } else {
-            if (validPrefix == null) {
-                // TODO: 3/14/2023 telegramga log tashlash kerak
-                System.out.println(machine.getPrefix());
-                return;
-            }
 
             if (!machine.getInstId().equals(oldMachine.getInstId())) {
                 machineHistoryService.createChangeInst(oldMachine, machine);
                 return;
             }
-            if(machine.getIsContract())
-//            if (machine.getIsContract()) {
-//                if (validPrefix.getValid())
-//                    if ((machine.getTerminalId() == null && machine.getMerchantId() != null) || (machine.getTerminalId() != null && machine.getMerchantId() == null)) {
-//                        // TODO: 3/14/2023
-//                        System.out.println("xato ketgan " + machine.getSrNumber());
-//                    } else if (machine.getTerminalId() != null && (oldMachine.getState().equals(MachineState.HAS_CONTRACT_STAY_WAREHOUSE)|| (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE)))) {
-//                        oldMachine.setMerchantId(machine.getMerchantId());
-//                        oldMachine.setTerminalId(machine.getTerminalId());
-//                        oldMachine.setBranch(machine.getBranch());
-//                        oldMachine.setState(MachineState.HAS_CONTRACT_WITH_7003);
-//                    } else if (machine.getBranch() != null && !machine.getBranchMfo().equals(oldMachine.getBranchMfo())) {
-//                        oldMachine.setBranch(machine.getBranch());
-//                        oldMachine.setBranchMfo(machine.getBranchMfo());
-//                    } else {
-//                        System.out.println("old machine  =  >>   " + oldMachine);
-//                        System.out.println("new or changed machine  =  >> " + machine);
-//                    }
-//            } else {
-//                oldMachine.setState(MachineState.HAS_NOT_CONTRACT_WORKING_7003);
-//            }
-//            if (machine.getIsContract() && (oldMachine.getState().equals(MachineState.HAS_CONTRACT_WITH_7003) || oldMachine.getState().equals(MachineState.HAS_CONTRACT_STAY_WAREHOUSE))) {
-//                oldMachine.setState(MachineState.HAS_CONTRACT_NOT_7003);
-//            } else {
-//                oldMachine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
-//            }
-
+            if (validPrefix.getValid()) {
+                if (machine.getIsContract() && oldMachine.getIsContract()) {
+                    if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_STAY_WAREHOUSE) && machine.getMerchantId() != null && machine.getTerminalId() != null) {
+                        oldMachine.setState(MachineState.HAS_CONTRACT_WITH_7003);
+                        oldMachine.setTerminalId(machine.getTerminalId());
+                        oldMachine.setMerchantId(machine.getMerchantId());
+                    } else if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_WITH_7003) && machine.getMerchantId() == null && machine.getTerminalId() == null) {
+                        oldMachine.setState(MachineState.HAS_CONTRACT_STAY_WAREHOUSE);
+                        oldMachine.setTerminalId(machine.getTerminalId());
+                        oldMachine.setMerchantId(machine.getMerchantId());
+                    }
+                } else if (!machine.getIsContract() && !oldMachine.getIsContract()) {
+                    if (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE) && machine.getMerchantId() != null && machine.getTerminalId() != null) {
+                        oldMachine.setState(MachineState.HAS_NOT_CONTRACT_WORKING_7003);
+                        oldMachine.setTerminalId(machine.getTerminalId());
+                        oldMachine.setMerchantId(machine.getMerchantId());
+                    } else if (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_WORKING_7003) && machine.getMerchantId() == null && machine.getTerminalId() == null) {
+                        oldMachine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
+                        oldMachine.setTerminalId(machine.getTerminalId());
+                        oldMachine.setMerchantId(machine.getMerchantId());
+                    }
+                } else if (machine.getIsContract()) {
+                    if (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_WORKING_7003) && machine.getMerchantId() == null && machine.getTerminalId() == null) {
+                        oldMachine.setState(MachineState.HAS_CONTRACT_STAY_WAREHOUSE);
+                        oldMachine.setTerminalId(machine.getTerminalId());
+                        oldMachine.setMerchantId(machine.getMerchantId());
+                    } else if (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE) && machine.getMerchantId() != null && machine.getTerminalId() != null) {
+                        oldMachine.setState(MachineState.HAS_CONTRACT_WITH_7003);
+                        oldMachine.setTerminalId(machine.getTerminalId());
+                        oldMachine.setMerchantId(machine.getMerchantId());
+                    } else if (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_WORKING_7003)) {
+                        oldMachine.setState(MachineState.HAS_CONTRACT_WITH_7003);
+                    } else if (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE)) {
+                        oldMachine.setState(MachineState.HAS_CONTRACT_STAY_WAREHOUSE);
+                    }
+                } else {
+                    if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_WITH_7003) && machine.getMerchantId() == null && machine.getTerminalId() == null) {
+                        oldMachine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
+                        oldMachine.setTerminalId(machine.getTerminalId());
+                        oldMachine.setMerchantId(machine.getMerchantId());
+                    } else if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_STAY_WAREHOUSE) && machine.getMerchantId() != null && machine.getTerminalId() != null) {
+                        oldMachine.setState(MachineState.HAS_NOT_CONTRACT_WORKING_7003);
+                        oldMachine.setTerminalId(machine.getTerminalId());
+                        oldMachine.setMerchantId(machine.getMerchantId());
+                    } else if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_WITH_7003)) {
+                        oldMachine.setState(MachineState.HAS_NOT_CONTRACT_WORKING_7003);
+                    } else if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_STAY_WAREHOUSE)) {
+                        oldMachine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
+                    }
+                }
+            } else {
+                if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_NOT_7003) && !machine.getIsContract()) {
+                    oldMachine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
+                } else if (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_NOT_7003) && machine.getIsContract()) {
+                    oldMachine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
+                }
+            }
             machineRepository.save(oldMachine);
         }
     }
