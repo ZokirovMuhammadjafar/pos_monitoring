@@ -18,7 +18,7 @@ import org.hibernate.annotations.DynamicUpdate;
 public class Branch extends AbstractEntity {
 
     @Column
-    protected   String name;
+    protected String name;
 
     @Column(unique = true)
     protected String mfo;

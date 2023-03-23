@@ -1,7 +1,6 @@
 package com.pos.monitoring.utils;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -35,11 +34,7 @@ public class ClassToMapUtils {
     }
 
     private static Boolean parseBoolean(String object) {
-        if (object != null && object.equals("t")) {
-            return true;
-        } else {
-            return false;
-        }
+        return object != null && object.equals("t");
     }
 
     public static <T> List<T> mapToClassList(List<Map<String, Object>> objectMapList, Class<T> clazz) throws InstantiationException, IllegalAccessException {
@@ -64,22 +59,22 @@ public class ClassToMapUtils {
     }
 
     private static String changeLetterStyleToLower(String word) {
-        String result = "";
+        StringBuilder result = new StringBuilder();
 
         char c = word.charAt(0);
-        result = result + Character.toLowerCase(c);
+        result.append(Character.toLowerCase(c));
 
         for (int i = 1; i < word.length(); i++) {
 
             char ch = word.charAt(i);
             if (Character.isUpperCase(ch)) {
-                result = result + '_';
-                result = result + Character.toLowerCase(ch);
+                result.append('_');
+                result.append(Character.toLowerCase(ch));
             } else {
-                result = result + ch;
+                result.append(ch);
             }
         }
-        return result;
+        return result.toString();
     }
 
 }

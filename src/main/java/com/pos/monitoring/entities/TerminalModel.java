@@ -7,8 +7,6 @@ import lombok.Setter;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-import java.util.Map;
-
 @Entity
 @Getter
 @Setter
@@ -19,7 +17,7 @@ import java.util.Map;
 public class TerminalModel extends AbstractEntity {
     private String name;
 
-    @Column(unique = true,nullable = false)
+    @Column(unique = true, nullable = false)
     private String prefix;
-    private Boolean valid=Boolean.FALSE;
+    private Boolean valid = Boolean.FALSE;
 }

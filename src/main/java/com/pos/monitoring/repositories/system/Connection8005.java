@@ -7,7 +7,6 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Repository;
-import org.springframework.ui.velocity.VelocityEngineUtils;
 import org.springframework.util.ObjectUtils;
 
 import java.sql.*;
@@ -41,7 +40,7 @@ public class Connection8005 {
 
     private List<Map<String, Object>> getResultQuery(PreparedStatement preparedStatement) throws SQLException {
         List<Map<String, Object>> list = new LinkedList<>();
-        ResultSet resultSet=null;
+        ResultSet resultSet;
         try {
             resultSet = preparedStatement.executeQuery();
             if (resultSet != null) {
