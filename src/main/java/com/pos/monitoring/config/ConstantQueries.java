@@ -1,7 +1,7 @@
 package com.pos.monitoring.config;
 
-public class ConstantQueries {
-    public static final String GET_ALL_CHANGE_MACHINES = """
+public interface ConstantQueries {
+    String GET_ALL_CHANGE_MACHINES = """
             select *
             from (select m.sr_number                                               as sr_number,
                          m.terminal_id                                             as terminal_id,
@@ -19,7 +19,7 @@ public class ConstantQueries {
                          m.creation_date > current_timestamp - interval '2 month')) as t;
             """;
 
-    public static final String GET_ALL_MACHINES_FIRST = """
+    String GET_ALL_MACHINES_FIRST = """
                select t.*, checker(inst_id :=  t.inst_id, sr_number := t.sr_number) as is_contract
                                                        from (select m.sr_number        as sr_number,
                                                                     m.terminal_id      as terminal_id,

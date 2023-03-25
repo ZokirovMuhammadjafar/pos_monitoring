@@ -37,13 +37,13 @@ public class TerminalModelServiceImpl implements TerminalModelService {
     @Override
     public TerminalModel get(String prefix) {
         TerminalModel terminalModel = terminalModelRepository.findByPrefixAndDeleted(prefix, false);
-        if(terminalModel==null)throw new ValidatorException("prefix xato kiritilgan");
+        if (terminalModel == null) throw new ValidatorException("prefix xato kiritilgan");
         return terminalModel;
     }
 
     @Override
     public TerminalModel getById(Long id) {
-        return terminalModelRepository.findById(id).orElseThrow(()->{
+        return terminalModelRepository.findById(id).orElseThrow(() -> {
             throw new ValidatorException("id xato kiritilgan" + id);
         });
 
