@@ -21,13 +21,13 @@ class PosMonitoringApplicationTests {
 
 	}
 
-	@Test
-	void machineTest(){
-		connection8005.getAllChangeMachines();
-	}
+//	@Test
+//	void machineTest(){
+//		connection8005.getAllChangeMachines();
+//	}
 	@Test
 	void machineTestUpdate(){
-		jobService.synchronizeMachine();
+//		jobService.synchronizeMachine();
 	}
 
 

@@ -4,13 +4,9 @@ server:
 
 spring:
   datasource:
-
     url: jdbc:postgresql://localhost:5432/pos-monitoring
     username: postgres
     password: postgres
-#    password: 4epmvS/uvRQa@NhN
-#    username: postgres
-#    url: jdbc:postgresql://172.17.119.4:6066/pos-monitoring
 8005:
   connection-db:
     url: jdbc:postgresql://localhost:5432/7005

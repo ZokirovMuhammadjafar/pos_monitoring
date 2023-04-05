@@ -1,16 +1,17 @@
 package com.pos.monitoring.services.impl;
 
-import com.pos.monitoring.entities.MachineState;
 import com.pos.monitoring.entities.TerminalModel;
 import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.repositories.TerminalModelRepository;
 import com.pos.monitoring.services.MachineService;
 import com.pos.monitoring.services.TerminalModelService;
-import jakarta.persistence.criteria.CriteriaQuery;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service(value = "terminalModelService")
 @RequiredArgsConstructor
@@ -29,9 +30,9 @@ public class TerminalModelServiceImpl implements TerminalModelService {
     }
 
     @Override
-    public List<TerminalModel> getAll() {
-
-        return null;
+    public List<TerminalModel> getAll(Integer limit, Integer page) {
+        Page<TerminalModel> all = terminalModelRepository.findAll(PageRequest.of(page / limit, limit));
+        return all.get().collect(Collectors.toList());
     }
 
     @Override
@@ -46,7 +47,6 @@ public class TerminalModelServiceImpl implements TerminalModelService {
         return terminalModelRepository.findById(id).orElseThrow(() -> {
             throw new ValidatorException("id xato kiritilgan" + id);
         });
-
     }
 
     @Override
@@ -63,13 +63,13 @@ public class TerminalModelServiceImpl implements TerminalModelService {
         TerminalModel terminalModel = terminalModelRepository.findById(update.getId()).orElseThrow(() -> {
             throw new ValidatorException("idsi topilmadi == >> " + update.getId());
         });
-        if(update.getName()!=null){
+        if (update.getName() != null) {
             terminalModel.setName(update.getName());
         }
-        if(update.getPrefix()!=null){
+        if (update.getPrefix() != null) {
             terminalModel.setPrefix(update.getPrefix());
         }
-        if(update.getValid()!=terminalModel.getValid()){
+        if (update.getValid() != terminalModel.getValid()) {
             terminalModel.setValid(update.getValid());
         }
         TerminalModel save = terminalModelRepository.save(terminalModel);

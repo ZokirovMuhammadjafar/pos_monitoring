@@ -3,13 +3,14 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/pos-monitoring
+    password: 4epmvS/uvRQa@NhN
     username: postgres
-    password: postgres
+    url: jdbc:postgresql://172.16.21.138:5432/pos-monitoring
 
 8005:
   connection-db:
-    url: jdbc:postgresql://localhost:5432/7005
+#    url: jdbc:postgresql://localhost:5432/7005
+    url: jdbc:postgresql://172.16.21.134:5432/7005
     username: postgres
-    password: postgres
+    password: 0sEps3bP3RdXkRs7q
     driver: org.postgresql.Driver

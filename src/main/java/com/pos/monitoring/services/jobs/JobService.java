@@ -14,15 +14,14 @@ public class JobService {
     private final BranchService branchService;
     private final MachineService machineService;
 
-    @Scheduled(cron = "0 * * * *")
+    @Scheduled(cron = "0 * * * * *")
     public void synchronizeBranch() {
         System.out.println("------------ Branches start synchronization------------");
         branchService.synchronize();
         System.out.println("------------ Branches end synchronization------------");
     }
 
-    @Scheduled(cron = "0 * * * *")
-    @Transactional
+    @Scheduled(cron = "0 * * * * *")
     public void synchronizeMachine() {
         System.out.println("------------ Machines start synchronization------------");
         machineService.synchronize();

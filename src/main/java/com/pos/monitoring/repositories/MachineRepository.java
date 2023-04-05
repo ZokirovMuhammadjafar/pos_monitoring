@@ -12,4 +12,6 @@ public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
 
     @Query("update Machine m set m.deleted = true where m.prefix = ?1 ")
     void deleteByPrefix(String prefix);
+
+
 }

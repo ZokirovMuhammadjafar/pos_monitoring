@@ -34,6 +34,7 @@ public class Connection8005 {
             getConnection();
         }
         PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_ALL_CHANGE_MACHINES);
+
         List<Map<String, Object>> list = getResultQuery(preparedStatement);
         return ClassToMapUtils.mapToClassList(list,Machine.class);
     }
@@ -62,6 +63,7 @@ public class Connection8005 {
             e.printStackTrace();
         } finally {
             connection.close();
+            connection=null;
         }
         return list;
     }

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -48,6 +49,7 @@ public class MachineServiceImpl implements MachineService {
                 // TODO: 3/13/2023 shuni telegramga tashlab qoyish kerak branch va tid mid sr
                 continue;
             }
+            System.out.println(machine.toString());
             machine.setPrefix(machine.getSrNumber().substring(0, 3));
             stateChoose(machine);
         }
@@ -57,6 +59,8 @@ public class MachineServiceImpl implements MachineService {
     public void deleteByPrefix(String prefix) {
         machineRepository.deleteByPrefix(prefix);
     }
+
+
 
     private void stateChoose(Machine machine) {
         TerminalModel validPrefix = terminalModelRepository.findByPrefixAndDeleted(machine.getPrefix(), false);
@@ -96,7 +100,8 @@ public class MachineServiceImpl implements MachineService {
                     }
                 }
             }
-            machineRepository.save(machine);
+            machine.setUpdateDate(new Date());
+            machineRepository.saveAndFlush(machine);
         } else {
 
             if (!machine.getInstId().equals(oldMachine.getInstId())) {
@@ -160,7 +165,7 @@ public class MachineServiceImpl implements MachineService {
                     oldMachine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
                 }
             }
-            machineRepository.save(oldMachine);
+            machineRepository.saveAndFlush(oldMachine);
         }
     }
 
