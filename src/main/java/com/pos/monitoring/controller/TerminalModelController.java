@@ -4,6 +4,8 @@ import com.pos.monitoring.entities.TerminalModel;
 import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.services.TerminalModelService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Field;
@@ -30,11 +32,13 @@ public class TerminalModelController {
     }
 
     @PostMapping("/create")
+    @Transactional
     public TerminalModel create(@RequestBody TerminalModel terminalModel) {
         return terminalModelService.create(terminalModel);
     }
 
     @PostMapping("/update")
+    @Transactional
     public TerminalModel update(@RequestBody TerminalModel updateTerminal) {
         if (updateTerminal.getId() == null) {
             throw new ValidatorException("idsi null kelgan");
@@ -60,9 +64,10 @@ public class TerminalModelController {
 
     }
 
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        terminalModelService.deleteById(id);
+    @PostMapping("/delete")
+    @Transactional
+    public void delete(@RequestBody TerminalModel terminalModel) {
+        terminalModelService.deleteById(terminalModel.getId());
     }
 
     private Map<String,String>getMap(TerminalModel terminalModel) throws IllegalAccessException {

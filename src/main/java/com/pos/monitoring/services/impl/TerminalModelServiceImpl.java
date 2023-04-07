@@ -5,19 +5,19 @@ import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.repositories.TerminalModelRepository;
 import com.pos.monitoring.services.MachineService;
 import com.pos.monitoring.services.TerminalModelService;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service(value = "terminalModelService")
 @RequiredArgsConstructor
 public class TerminalModelServiceImpl implements TerminalModelService {
     private final TerminalModelRepository terminalModelRepository;
     private final MachineService machineService;
+    private final EntityManager entityManager;
 
     @Override
     public TerminalModel create(TerminalModel create) {
@@ -31,8 +31,8 @@ public class TerminalModelServiceImpl implements TerminalModelService {
 
     @Override
     public List<TerminalModel> getAll(Integer limit, Integer page) {
-        Page<TerminalModel> all = terminalModelRepository.findAll(PageRequest.of(page / limit, limit));
-        return all.get().collect(Collectors.toList());
+        List<TerminalModel> all = terminalModelRepository.findAllByDeletedFalse(PageRequest.of(page / limit, limit));
+        return all;
     }
 
     @Override
@@ -51,28 +51,31 @@ public class TerminalModelServiceImpl implements TerminalModelService {
 
     @Override
     public void deleteById(Long id) {
+        if (id == null) {
+            throw new ValidatorException("ID CAME NULL");
+        }
         TerminalModel terminalModel = terminalModelRepository.findById(id).orElseThrow(() -> {
-            throw new ValidatorException("idsi topilmadi == >> " + id);
+            throw new ValidatorException("TERMINAL MODEL NOT FOUND ID = " + id);
         });
-        terminalModelRepository.delete(terminalModel);
+        terminalModelRepository.deleteTerminal(terminalModel.getId());
         machineService.deleteByPrefix(terminalModel.getPrefix());
     }
 
     @Override
     public TerminalModel update(TerminalModel update) {
         TerminalModel terminalModel = terminalModelRepository.findById(update.getId()).orElseThrow(() -> {
-            throw new ValidatorException("idsi topilmadi == >> " + update.getId());
+            throw new ValidatorException("TERMINAL MODEL NOT FOUND ID = " + update.getId());
         });
+        TerminalModel save = null;
         if (update.getName() != null) {
             terminalModel.setName(update.getName());
-        }
-        if (update.getPrefix() != null) {
-            terminalModel.setPrefix(update.getPrefix());
+            save = terminalModelRepository.save(terminalModel);
         }
         if (update.getValid() != terminalModel.getValid()) {
             terminalModel.setValid(update.getValid());
+            machineService.updateValid(terminalModel);
+            save = terminalModelRepository.save(terminalModel);
         }
-        TerminalModel save = terminalModelRepository.save(terminalModel);
         return save;
     }
 }

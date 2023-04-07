@@ -17,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -38,14 +41,14 @@ public class MachineServiceImpl implements MachineService {
             if (branchMfo != null) {
                 Branch branch = branchRepository.findByMfoAndDeleted(branchMfo, false);
                 if (branch == null) {
-                    System.out.println("branch topilmadi  ===  >>>"+branchMfo);
+                    System.out.println("branch topilmadi  ===  >>>" + branchMfo);
                     // TODO: 3/13/2023 shuni telegram bot orqali jonatib qoyish kerak mfo tid mid
                     continue;
                 }
                 machine.setBranch(branch);
             }
             if (machine.getSrNumber() != null && machine.getSrNumber().length() <= 3) {
-                System.err.println("mavhinada xatolik ===>>>>   "+machine.toString());
+                System.err.println("mavhinada xatolik ===>>>>   " + machine.toString());
                 // TODO: 3/13/2023 shuni telegramga tashlab qoyish kerak branch va tid mid sr
                 continue;
             }
@@ -60,50 +63,32 @@ public class MachineServiceImpl implements MachineService {
         machineRepository.deleteByPrefix(prefix);
     }
 
+    @Override
+    public void updateValid(TerminalModel terminalModel) {
+        List<Machine> machineStream = machineRepository.findPrefix(terminalModel.getPrefix()).collect(Collectors.toList());
+        Executors.newFixedThreadPool(8).submit(()->{
+            machineStream.forEach(machine->{
+                create(machine, terminalModel);
+                machine.setUpdateDate(new Date());
+                machineRepository.save(machine);
+            });
+        });
+    }
 
 
     private void stateChoose(Machine machine) {
         TerminalModel validPrefix = terminalModelRepository.findByPrefixAndDeleted(machine.getPrefix(), false);
-        Machine oldMachine = machineRepository.findBySrNumberAndDeleted(machine.getSrNumber(),false);
+        Machine oldMachine = machineRepository.findBySrNumberAndDeleted(machine.getSrNumber(), false);
         if (validPrefix == null) {
             // TODO: 3/14/2023 telegramga log tashlash kerak
             System.out.println(machine.getPrefix());
             return;
         }
         if (oldMachine == null) {
-            if (machine.getIsContract()) {
-                if (machine.getTerminalId() != null && machine.getMerchantId() != null && machine.getInstId() != null) {
-                    if (validPrefix.getValid()) {
-                        machine.setState(MachineState.HAS_CONTRACT_WITH_7003);
-                    } else {
-                        machine.setState(MachineState.HAS_CONTRACT_NOT_7003);
-                    }
-                } else if (machine.getTerminalId() == null && machine.getMerchantId() == null && machine.getInstId() != null) {
-                    if (validPrefix.getValid()) {
-                        machine.setState(MachineState.HAS_CONTRACT_STAY_WAREHOUSE);
-                    } else {
-                        machine.setState(MachineState.HAS_CONTRACT_NOT_7003);
-                    }
-                }
-            } else {
-                if (machine.getTerminalId() != null && machine.getMerchantId() != null && machine.getInstId() != null) {
-                    if (validPrefix.getValid()) {
-                        machine.setState(MachineState.HAS_NOT_CONTRACT_WORKING_7003);
-                    } else {
-                        machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
-                    }
-                } else if (machine.getTerminalId() == null && machine.getMerchantId() == null && machine.getInstId() != null) {
-                    if (validPrefix.getValid()) {
-                        machine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
-                    } else {
-                        machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
-                    }
-                }
-            }
-            machine.setUpdateDate(new Date());
+            create(machine, validPrefix);
+
             machineRepository.saveAndFlush(machine);
         } else {
-
             if (!machine.getInstId().equals(oldMachine.getInstId())) {
                 machineHistoryService.createChangeInst(oldMachine, machine);
                 return;
@@ -165,7 +150,40 @@ public class MachineServiceImpl implements MachineService {
                     oldMachine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
                 }
             }
+            machine.setUpdateDate(new Date());
             machineRepository.saveAndFlush(oldMachine);
+        }
+    }
+
+    private synchronized static void create(Machine machine, TerminalModel validPrefix) {
+        if (machine.getIsContract()) {
+            if (machine.getTerminalId() != null && machine.getMerchantId() != null && machine.getInstId() != null) {
+                if (validPrefix.getValid()) {
+                    machine.setState(MachineState.HAS_CONTRACT_WITH_7003);
+                } else {
+                    machine.setState(MachineState.HAS_CONTRACT_NOT_7003);
+                }
+            } else if (machine.getTerminalId() == null && machine.getMerchantId() == null && machine.getInstId() != null) {
+                if (validPrefix.getValid()) {
+                    machine.setState(MachineState.HAS_CONTRACT_STAY_WAREHOUSE);
+                } else {
+                    machine.setState(MachineState.HAS_CONTRACT_NOT_7003);
+                }
+            }
+        } else {
+            if (machine.getTerminalId() != null && machine.getMerchantId() != null && machine.getInstId() != null) {
+                if (validPrefix.getValid()) {
+                    machine.setState(MachineState.HAS_NOT_CONTRACT_WORKING_7003);
+                } else {
+                    machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
+                }
+            } else if (machine.getTerminalId() == null && machine.getMerchantId() == null && machine.getInstId() != null) {
+                if (validPrefix.getValid()) {
+                    machine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
+                } else {
+                    machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
+                }
+            }
         }
     }
 
