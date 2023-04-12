@@ -4,7 +4,6 @@ import com.pos.monitoring.entities.TerminalModel;
 import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.services.TerminalModelService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -91,6 +90,16 @@ public class TerminalModelController {
             map.put(fieldName, String.valueOf(field.get(terminalModel)));
         }else if(field.getType().getName().equals(Long.class.getName())){
             map.put(fieldName,String.valueOf(field.get(terminalModel)));
+        }else if(field.getType().isPrimitive()){
+            switch (field.getType().getSimpleName()){
+                case "int"->map.put(fieldName,String.valueOf(field.getInt(terminalModel)));
+                case "short"->map.put(fieldName,String.valueOf(field.getShort(terminalModel)));
+                case "boolean"->map.put(fieldName,String.valueOf(field.getBoolean(terminalModel)));
+                case "long"->map.put(fieldName,String.valueOf(field.getLong(terminalModel)));
+                case "byte"->map.put(fieldName,String.valueOf(field.getByte(terminalModel)));
+                case "char"->map.put(fieldName,String.valueOf(field.getChar(terminalModel)));
+                case "double"->map.put(fieldName,String.valueOf(field.getDouble(terminalModel)));
+            }
         }
     }
 

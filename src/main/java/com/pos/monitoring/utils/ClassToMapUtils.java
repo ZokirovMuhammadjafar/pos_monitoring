@@ -1,5 +1,7 @@
 package com.pos.monitoring.utils;
 
+import com.pos.monitoring.entities.Soft;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
@@ -8,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ClassToMapUtils {
-    public static <T> T mapToClass(Map<String, Object> objectMap, Class<T> clazz) throws InstantiationException, IllegalAccessException {
+    public static <T> T mapToClass(Map<String, Object> objectMap, Class<T> clazz) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         T objects = clazz.newInstance();
         Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
@@ -27,6 +29,9 @@ public class ClassToMapUtils {
                     field.set(objects, object);
                 } else if (genericType.getTypeName().equals(Boolean.class.getName())) {
                     field.set(objects, parseBoolean((String) object));
+                }else if((field.getType().isEnum())){
+                    Class<?> enums = Class.forName("com.pos.monitoring.entities."+name.toLowerCase().substring(0,1).toUpperCase()+name.substring(1));
+                    field.set(objects,Enum.valueOf((Class<? extends Enum>)enums, (String) object));
                 }
             }
         }
@@ -37,7 +42,7 @@ public class ClassToMapUtils {
         return object != null && object.equals("t");
     }
 
-    public static <T> List<T> mapToClassList(List<Map<String, Object>> objectMapList, Class<T> clazz) throws InstantiationException, IllegalAccessException {
+    public static <T> List<T> mapToClassList(List<Map<String, Object>> objectMapList, Class<T> clazz) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         List<T> result = new ArrayList<>();
         for (Map<String, Object> objectMap : objectMapList) {
             result.add(mapToClass(objectMap, clazz));

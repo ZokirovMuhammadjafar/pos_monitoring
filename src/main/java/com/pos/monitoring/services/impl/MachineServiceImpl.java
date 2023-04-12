@@ -1,9 +1,7 @@
 package com.pos.monitoring.services.impl;
 
-import com.pos.monitoring.entities.MachineState;
-import com.pos.monitoring.entities.Branch;
-import com.pos.monitoring.entities.Machine;
-import com.pos.monitoring.entities.TerminalModel;
+import com.pos.monitoring.dto.SingleResponse;
+import com.pos.monitoring.entities.*;
 import com.pos.monitoring.repositories.BranchRepository;
 import com.pos.monitoring.repositories.MachineRepository;
 import com.pos.monitoring.repositories.TerminalModelRepository;
@@ -11,12 +9,18 @@ import com.pos.monitoring.repositories.system.Connection8005;
 import com.pos.monitoring.services.MachineHistoryService;
 import com.pos.monitoring.services.MachineService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -66,8 +70,8 @@ public class MachineServiceImpl implements MachineService {
     @Override
     public void updateValid(TerminalModel terminalModel) {
         List<Machine> machineStream = machineRepository.findPrefix(terminalModel.getPrefix()).collect(Collectors.toList());
-        Executors.newFixedThreadPool(8).submit(()->{
-            machineStream.forEach(machine->{
+        Executors.newFixedThreadPool(8).submit(() -> {
+            machineStream.forEach(machine -> {
                 create(machine, terminalModel);
                 machine.setUpdateDate(new Date());
                 machineRepository.save(machine);
@@ -75,8 +79,45 @@ public class MachineServiceImpl implements MachineService {
         });
     }
 
+    @Override
+    public SingleResponse getStat(String instId) {
+        List<Map<String, Object>> stat = machineRepository.getStat(instId);
+        Map<String, Long> map = new HashMap<>();
+        map.put("allTerminal", 0L);
+        map.put("hasContractTerminal", 0L);
+        for (Map<String, Object> objectMap : stat) {
+            Short state = (Short) objectMap.get("state");
+            Long number = (Long) objectMap.get("number");
+            convert(map, MachineState.values()[state], number);
+        }
+        return SingleResponse.of(map);
+    }
+
+    private void convert(Map<String, Long> map, MachineState state, Long count) {
+        switch (state) {
+            case HAS_CONTRACT_WITH_7003 -> {
+                map.put("working", count);
+                map.put("allTerminal", map.get("allTerminal") + count);
+                map.put("hasContractTerminal", map.get("hasContractTerminal") + count);
+            }
+            case HAS_CONTRACT_STAY_WAREHOUSE -> {
+                map.put("notWorking", count);
+                map.put("allTerminal", map.get("allTerminal") + count);
+                map.put("hasContractTerminal", map.get("hasContractTerminal") + count);
+            }
+            case HAS_NOT_CONTRACT_WORKING_7003 -> {
+                map.put("notContractWorking", count);
+                map.put("allTerminal", map.get("allTerminal") + count);
+            }
+            case HAS_NOT_CONTRACT_STAY_WAREHOUSE -> {
+                map.put("notContractNotWorking", count);
+                map.put("allTerminal", map.get("allTerminal") + count);
+            }
+        }
+    }
 
     private void stateChoose(Machine machine) {
+
         TerminalModel validPrefix = terminalModelRepository.findByPrefixAndDeleted(machine.getPrefix(), false);
         Machine oldMachine = machineRepository.findBySrNumberAndDeleted(machine.getSrNumber(), false);
         if (validPrefix == null) {
@@ -84,9 +125,12 @@ public class MachineServiceImpl implements MachineService {
             System.out.println(machine.getPrefix());
             return;
         }
+        if(machine.getSoft()==null&&validPrefix.getName().contains("920")){
+           machine.setSoft(Soft.UZPOS);
+        }
+        machine.setModel(validPrefix.getName());
         if (oldMachine == null) {
             create(machine, validPrefix);
-
             machineRepository.saveAndFlush(machine);
         } else {
             if (!machine.getInstId().equals(oldMachine.getInstId())) {
@@ -147,10 +191,12 @@ public class MachineServiceImpl implements MachineService {
                 if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_NOT_7003) && !machine.getIsContract()) {
                     oldMachine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
                 } else if (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_NOT_7003) && machine.getIsContract()) {
-                    oldMachine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
+                    oldMachine.setState(MachineState.HAS_CONTRACT_NOT_7003);
                 }
             }
-            machine.setUpdateDate(new Date());
+            oldMachine.setUpdateDate(new Date());
+            oldMachine.setSoft(machine.getSoft());
+            oldMachine.setModel(machine.getModel());
             machineRepository.saveAndFlush(oldMachine);
         }
     }

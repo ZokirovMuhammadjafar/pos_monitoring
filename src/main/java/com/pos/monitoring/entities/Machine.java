@@ -30,6 +30,8 @@ public class Machine extends AbstractEntity {
     protected String merchantId;
     @Column
     protected String terminalId;
+    protected Soft soft;
+    protected String model;
     protected String prefix;
     protected Boolean isContract = false;
     @Enumerated(EnumType.ORDINAL)

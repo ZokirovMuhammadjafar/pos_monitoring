@@ -6,6 +6,7 @@ public interface ConstantQueries {
             from (select m.sr_number        as sr_number,
                          m.terminal_id      as terminal_id,
                          m.merchant_id      as merchant_id,
+                         m.soft      as soft,
                          b.code             as branch_mfo,
                          b.id               as branch_id,
                          '0' || b.bank_code as inst_id
@@ -14,8 +15,8 @@ public interface ConstantQueries {
                   where m.state <> 2
                     and m.type_id = 6
                     and bank_code not in ('9006', '9004', '9002')
-                    and (m.updated_date > current_timestamp - interval '1 day' or
-                         m.creation_date > current_timestamp - interval '1 day')) as t;
+                    and (m.updated_date > current_timestamp - interval '15 day' or
+                         m.creation_date > current_timestamp - interval '15 day')) as t;
             """;
 
     String GET_ALL_MACHINES_FIRST = """
