@@ -20,16 +20,6 @@ public class RestConfig {
     public RestTemplate getRestClient() {
         RestTemplate restTemplate = new RestTemplate(httpRequestFactory());
         restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
-        restTemplate.getMessageConverters().add(new GsonHttpMessageConverter() {
-            @Override
-            public void setSupportedMediaTypes(List<MediaType> supportedMediaTypes) {
-                ArrayList<MediaType> temp = new ArrayList<MediaType>(supportedMediaTypes);
-                temp.add(new MediaType("text", "html", StandardCharsets.UTF_8));
-                temp.add(new MediaType("application", "json", StandardCharsets.UTF_8));
-                temp.add(new MediaType("application", "x-www-form-urlencoded", StandardCharsets.UTF_8));
-                super.setSupportedMediaTypes(temp);
-            }
-        });
         return restTemplate;
     }
 

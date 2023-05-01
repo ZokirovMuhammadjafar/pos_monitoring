@@ -4,6 +4,7 @@ import com.pos.monitoring.dto.ListResponse;
 import com.pos.monitoring.dto.SingleResponse;
 import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.services.MachineService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;

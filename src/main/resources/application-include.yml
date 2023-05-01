@@ -1,3 +1,9 @@
+springdoc:
+  packages-to-scan: com.pos.monitoring.controller
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+       path : /api-docs
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
@@ -11,7 +17,7 @@ spring:
       transaction-isolation: 2
       auto-commit: false
   jpa:
-    show-sql: false
+    show-sql: true
     hibernate:
       ddl-auto: update
     properties:
@@ -28,6 +34,13 @@ spring:
     open-in-view: true
   main:
     lazy-initialization: false
+# jwt configuration elements
+jwt:
+  expire: 60000000
+  refresh_expire: 864000000
+  secret: 'gfhg4561967$%#%$%^?>?>:gjhgsdfsd?>jahdqpdsdfgsdfgqweg143635783579821wefgafnherythgwbsbssdhgf'
+  issuer_access: 'Men1ng $eviml1 0yinim Asph@ltasnaksdfgkjlabsdkg avkljqh asdkghalsnd vlkashdfglan sdf.gqw;sdfhg;arpgf;aklnsdbqiupwehtp1qg'
+  issuer_refresh: 'Uzc@rd b1rinch1 t0l0v tizasdfhgasdfghwejundb rtgjhwvb4yujbur4red6ur7,llt,mrfgyuol1mi'
 
 pos:
   monitoring:

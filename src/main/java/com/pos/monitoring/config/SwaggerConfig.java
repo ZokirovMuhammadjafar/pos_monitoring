@@ -14,18 +14,14 @@ import java.util.List;
 @Configuration
 public class SwaggerConfig {
 
-    // TODO: 4/14/2023 loggingni korish kerak ekan
-
     @Bean
     public OpenAPI api() {
         Server server = new Server();
         server.setUrl("/");
         return new OpenAPI().servers(List.of(server)).security(requirements()).schemaRequirement("Security schema", requirement()).info(info());
     }
-
-
     private Info info() {
-        return new Info().title("GEO STAT API").version("v1");
+        return new Info().title("pos monitoring api").version("v1");
     }
 
     private SecurityScheme requirement() {

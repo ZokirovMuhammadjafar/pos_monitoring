@@ -47,13 +47,12 @@ public class TerminalModelServiceImpl implements TerminalModelService {
             List<Predicate> predicates = new ArrayList<>();
 
             if (!ObjectUtils.isEmpty(pageableSearch.getName())) {
-                predicates.add(cb.equal(root.get("nane"), pageableSearch.getName()));
+                predicates.add(cb.equal(root.get("name"), pageableSearch.getName()));
             }
 
             if (!ObjectUtils.isEmpty(pageableSearch.getPrefix())) {
                 predicates.add(cb.like(root.get("prefix"), DaoUtils.toLikeCriteria(pageableSearch.getPrefix())));
             }
-
             return cb.and(predicates.toArray(new Predicate[0]));
         }, DaoUtils.toPaging(pageableSearch));
     }

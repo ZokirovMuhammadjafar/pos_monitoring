@@ -20,6 +20,10 @@ public class SingleResponse<T> extends Response implements Serializable {
 
     private SingleResponse() {
     }
+    public SingleResponse(String error,int code) {
+        super();
+        add("error",error);
+    }
 
     public static <T> SingleResponse of(T data) {
         return new SingleResponse(data);
