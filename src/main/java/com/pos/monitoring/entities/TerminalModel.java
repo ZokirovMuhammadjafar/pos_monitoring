@@ -1,7 +1,7 @@
 package com.pos.monitoring.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,6 +15,7 @@ import org.hibernate.annotations.SQLDelete;
 @DynamicInsert
 @DynamicUpdate
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "terminal_model")
 public class TerminalModel extends AbstractEntity {
     private String name;

@@ -1,14 +1,18 @@
 package com.pos.monitoring.services;
 
+import com.pos.monitoring.dtos.pageable.TerminalModelPageableSearch;
+import com.pos.monitoring.dtos.request.TerminalModelCreateDto;
+import com.pos.monitoring.dtos.request.TerminalModelUpdateDto;
 import com.pos.monitoring.entities.TerminalModel;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface TerminalModelService {
 
-    TerminalModel create(TerminalModel create) ;
+    void create(TerminalModelCreateDto createDto);
 
-    List<TerminalModel>getAll(Integer limit, Integer page);
+    Page<TerminalModel> getAll(TerminalModelPageableSearch pageableSearch);
 
     TerminalModel get(String prefix);
 
@@ -16,6 +20,6 @@ public interface TerminalModelService {
 
     void deleteById(Long id);
 
-    TerminalModel update(TerminalModel update);
+    void update(TerminalModelUpdateDto updateDto);
 
 }
