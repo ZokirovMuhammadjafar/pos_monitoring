@@ -1,8 +1,8 @@
 package com.pos.monitoring.repositories.system;
 
-import com.pos.monitoring.config.ConstantQueries;
+import com.pos.monitoring.repositories.system.queries.ConstantQueries;
 import com.pos.monitoring.entities.Machine;
-import com.pos.monitoring.utils.ClassToMapUtils;
+import com.pos.monitoring.utils.ReflectionUtils;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -36,7 +36,7 @@ public class Connection8005 {
         PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_ALL_CHANGE_MACHINES);
 
         List<Map<String, Object>> list = getResultQuery(preparedStatement);
-        return ClassToMapUtils.mapToClassList(list,Machine.class);
+        return ReflectionUtils.mapToClassList(list,Machine.class);
     }
 
     private List<Map<String, Object>> getResultQuery(PreparedStatement preparedStatement) throws SQLException {
@@ -74,7 +74,7 @@ public class Connection8005 {
         PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_ALL_MACHINES_FIRST);
         preparedStatement.setInt(1,a);
         List<Map<String, Object>> list = getResultQuery(preparedStatement);
-        return ClassToMapUtils.mapToClassList(list,Machine.class);
+        return ReflectionUtils.mapToClassList(list,Machine.class);
     }
 
 

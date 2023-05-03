@@ -1,4 +1,4 @@
-package com.pos.monitoring.dto;
+package com.pos.monitoring.dtos.base;
 
 import java.util.HashMap;
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.pos.monitoring.utils;
 
-import com.pos.monitoring.entities.Soft;
+import com.pos.monitoring.exceptions.ValidatorException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class ClassToMapUtils {
+public class ReflectionUtils {
     public static <T> T mapToClass(Map<String, Object> objectMap, Class<T> clazz) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         T objects = clazz.newInstance();
         Field[] fields = clazz.getDeclaredFields();
@@ -81,5 +81,43 @@ public class ClassToMapUtils {
         }
         return result.toString();
     }
+
+    public static void loopObjectFields(Class clazz, Object a, Map<String, String> apply) {
+        for (Field declaredField : clazz.getDeclaredFields()) {
+            try {
+                takeMap(a, apply, declaredField);
+            } catch (IllegalAccessException e) {
+                throw new ValidatorException(e);
+            }
+        }
+    }
+
+    private static void takeMap(Object objects, Map<String, String> map, Field field) throws IllegalAccessException {
+        field.setAccessible(true);
+        String fieldName = field.getName();
+        if (field.getType().getName().equals(String.class.getName())) {
+            String fieldValue = (String) field.get(objects);
+            map.put(fieldName, fieldValue);
+        } else if (field.getType().getName().equals(Double.class.getName())) {
+            map.put(fieldName, String.valueOf(field.get(objects)));
+        } else if (field.getType().getName().equals(Integer.class.getName())) {
+            map.put(fieldName, String.valueOf(field.get(objects)));
+        } else if (field.getType().getName().equals(Boolean.class.getName())) {
+            map.put(fieldName, String.valueOf(field.get(objects)));
+        } else if (field.getType().getName().equals(Long.class.getName())) {
+            map.put(fieldName, String.valueOf(field.get(objects)));
+        } else if (field.getType().isPrimitive()) {
+            switch (field.getType().getSimpleName()) {
+                case "int" -> map.put(fieldName, String.valueOf(field.getInt(objects)));
+                case "short" -> map.put(fieldName, String.valueOf(field.getShort(objects)));
+                case "boolean" -> map.put(fieldName, String.valueOf(field.getBoolean(objects)));
+                case "long" -> map.put(fieldName, String.valueOf(field.getLong(objects)));
+                case "byte" -> map.put(fieldName, String.valueOf(field.getByte(objects)));
+                case "char" -> map.put(fieldName, String.valueOf(field.getChar(objects)));
+                case "double" -> map.put(fieldName, String.valueOf(field.getDouble(objects)));
+            }
+        }
+    }
+
 
 }

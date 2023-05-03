@@ -1,10 +1,10 @@
-package com.pos.monitoring.dto;
+package com.pos.monitoring.dtos.response;
 
 
+
+import com.pos.monitoring.dtos.base.Response;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 public class SingleResponse<T> extends Response implements Serializable {
     private T data;

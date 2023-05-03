@@ -41,11 +41,3 @@ jwt:
   secret: 'gfhg4561967$%#%$%^?>?>:gjhgsdfsd?>jahdqpdsdfgsdfgqweg143635783579821wefgafnherythgwbsbssdhgf'
   issuer_access: 'Men1ng $eviml1 0yinim Asph@ltasnaksdfgkjlabsdkg avkljqh asdkghalsnd vlkashdfglan sdf.gqw;sdfhg;arpgf;aklnsdbqiupwehtp1qg'
   issuer_refresh: 'Uzc@rd b1rinch1 t0l0v tizasdfhgasdfghwejundb rtgjhwvb4yujbur4red6ur7,llt,mrfgyuol1mi'
-
-pos:
-  monitoring:
-    user:
-      username: sysAdmin
-      password: qwedyetyer123124_=
-    login:
-      url: http://localhost:8080/api/authenticate

@@ -1,7 +1,7 @@
 package com.pos.monitoring.services.impl;
 
-import com.pos.monitoring.dto.ListResponse;
-import com.pos.monitoring.dto.SingleResponse;
+import com.pos.monitoring.dtos.response.ListResponse;
+import com.pos.monitoring.dtos.response.SingleResponse;
 import com.pos.monitoring.dtos.pageable.MachineFilterDto;
 import com.pos.monitoring.entities.*;
 import com.pos.monitoring.repositories.BranchRepository;
@@ -11,10 +11,6 @@ import com.pos.monitoring.repositories.system.Connection8005;
 import com.pos.monitoring.services.MachineHistoryService;
 import com.pos.monitoring.services.MachineService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -45,7 +40,7 @@ public class MachineServiceImpl implements MachineService {
         for (Machine machine : allChangeMachines) {
             String branchMfo = machine.getBranchMfo();
             if (branchMfo != null) {
-                Branch branch = branchRepository.findByMfoAndDeleted(branchMfo, false);
+                Branch branch = branchRepository.findByMfoAndDeletedFalse(branchMfo);
                 if (branch == null) {
                     System.out.println("branch topilmadi  ===  >>>" + branchMfo);
                     // TODO: 3/13/2023 shuni telegram bot orqali jonatib qoyish kerak mfo tid mid
@@ -97,7 +92,8 @@ public class MachineServiceImpl implements MachineService {
 
     @Override
     public ListResponse getInformationByInstId(MachineFilterDto filterDto) {
-        branchRepository
+//        branchRepository
+        return null;
     }
 
     private void convert(Map<String, Long> map, MachineState state, Long count) {

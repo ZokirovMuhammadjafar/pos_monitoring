@@ -1,6 +1,6 @@
 package com.pos.monitoring.exceptions;
 
-import com.pos.monitoring.dto.SingleResponse;
+import com.pos.monitoring.dtos.response.SingleResponse;
 import com.pos.monitoring.utils.ServerUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;

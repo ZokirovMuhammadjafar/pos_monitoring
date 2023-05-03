@@ -8,4 +8,8 @@ public class ValidatorException extends RuntimeException{
     public ValidatorException(RuntimeException e) {
         super(e);
     }
+
+    public ValidatorException(IllegalAccessException e) {
+        super(e);
+    }
 }

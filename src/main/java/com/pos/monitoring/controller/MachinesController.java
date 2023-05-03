@@ -1,8 +1,6 @@
 package com.pos.monitoring.controller;
 
-import com.pos.monitoring.dto.ListResponse;
-import com.pos.monitoring.dto.SingleResponse;
-import com.pos.monitoring.dtos.pageable.MachineFilterDto;
+import com.pos.monitoring.dtos.response.SingleResponse;
 import com.pos.monitoring.services.MachineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

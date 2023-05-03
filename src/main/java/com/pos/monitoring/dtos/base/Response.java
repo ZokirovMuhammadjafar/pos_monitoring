@@ -1,13 +1,14 @@
-package com.pos.monitoring.dto;
+package com.pos.monitoring.dtos.base;
 
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Response {
+public class Response implements Serializable {
     protected boolean success;
     protected int code;
     protected Map<String, String> errors;
