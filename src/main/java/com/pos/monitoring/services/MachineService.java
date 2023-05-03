@@ -1,6 +1,8 @@
 package com.pos.monitoring.services;
 
+import com.pos.monitoring.dto.ListResponse;
 import com.pos.monitoring.dto.SingleResponse;
+import com.pos.monitoring.dtos.pageable.MachineFilterDto;
 import com.pos.monitoring.entities.TerminalModel;
 
 public interface MachineService {
@@ -17,4 +19,6 @@ public interface MachineService {
 
 
     SingleResponse getStat(String instId);
+
+    ListResponse getInformationByInstId(MachineFilterDto filterDto);
 }

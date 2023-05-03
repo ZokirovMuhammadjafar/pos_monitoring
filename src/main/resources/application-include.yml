@@ -36,7 +36,7 @@ spring:
     lazy-initialization: false
 # jwt configuration elements
 jwt:
-  expire: 60000000
+  expire: 86400000
   refresh_expire: 864000000
   secret: 'gfhg4561967$%#%$%^?>?>:gjhgsdfsd?>jahdqpdsdfgsdfgqweg143635783579821wefgafnherythgwbsbssdhgf'
   issuer_access: 'Men1ng $eviml1 0yinim Asph@ltasnaksdfgkjlabsdkg avkljqh asdkghalsnd vlkashdfglan sdf.gqw;sdfhg;arpgf;aklnsdbqiupwehtp1qg'

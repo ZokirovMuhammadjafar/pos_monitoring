@@ -19,8 +19,6 @@
             <Policies>
                 <SizeBasedTriggeringPolicy size="10MB"/>
             </Policies>
-            <DefaultRolloverStrategy fileIndex="max" compressionLevel="9"
-                                     compressionMode="zip" />
         </RollingFile>
 
     </Appenders>

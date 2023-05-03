@@ -1,6 +1,8 @@
 package com.pos.monitoring.services.impl;
 
+import com.pos.monitoring.dto.ListResponse;
 import com.pos.monitoring.dto.SingleResponse;
+import com.pos.monitoring.dtos.pageable.MachineFilterDto;
 import com.pos.monitoring.entities.*;
 import com.pos.monitoring.repositories.BranchRepository;
 import com.pos.monitoring.repositories.MachineRepository;
@@ -91,6 +93,11 @@ public class MachineServiceImpl implements MachineService {
             convert(map, MachineState.values()[state], number);
         }
         return SingleResponse.of(map);
+    }
+
+    @Override
+    public ListResponse getInformationByInstId(MachineFilterDto filterDto) {
+        branchRepository
     }
 
     private void convert(Map<String, Long> map, MachineState state, Long count) {

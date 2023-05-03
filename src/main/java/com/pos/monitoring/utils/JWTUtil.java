@@ -27,7 +27,7 @@ public class JWTUtil {
     @Value("${jwt.issuer_refresh}")
     private String issuerRefresh;
     public Date getExpireDate(){
-        return new Date((expire*1000L)+System.currentTimeMillis());
+        return new Date((expire*10L)+System.currentTimeMillis());
     }
     public  Date getExpireDateForRefreshToken(){
         return new Date(refresh_expire+System.currentTimeMillis());

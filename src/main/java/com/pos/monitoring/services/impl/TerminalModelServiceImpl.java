@@ -53,6 +53,7 @@ public class TerminalModelServiceImpl implements TerminalModelService {
             if (!ObjectUtils.isEmpty(pageableSearch.getPrefix())) {
                 predicates.add(cb.like(root.get("prefix"), DaoUtils.toLikeCriteria(pageableSearch.getPrefix())));
             }
+            predicates.add(cb.equal(root.get("deleted"),Boolean.FALSE));
             return cb.and(predicates.toArray(new Predicate[0]));
         }, DaoUtils.toPaging(pageableSearch));
     }

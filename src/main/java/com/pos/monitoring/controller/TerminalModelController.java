@@ -1,11 +1,11 @@
 package com.pos.monitoring.controller;
 
+import com.pos.monitoring.dto.SingleResponse;
 import com.pos.monitoring.dtos.pageable.TerminalModelPageableSearch;
 import com.pos.monitoring.dtos.request.TerminalModelCreateDto;
 import com.pos.monitoring.dtos.request.TerminalModelUpdateDto;
 import com.pos.monitoring.dtos.response.ListResponse;
 import com.pos.monitoring.entities.TerminalModel;
-import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.services.TerminalModelService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -16,52 +16,55 @@ import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 @RestController
 @RequestMapping("/api/terminal-models")
 @RequiredArgsConstructor
-@CrossOrigin
 public class TerminalModelController {
 
     private final TerminalModelService terminalModelService;
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     @GetMapping("/{id}")
-    public TerminalModel getById(@PathVariable String id) {
-        return terminalModelService.getById(Long.parseLong(id));
+    public SingleResponse getById(@PathVariable String id) {
+        return SingleResponse.of(terminalModelService.getById(Long.parseLong(id)));
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     @GetMapping("/prefix/{prefix}")
-    public TerminalModel getByPrefix(@PathVariable String prefix) {
-        return terminalModelService.get(prefix);
+    public SingleResponse getByPrefix(@PathVariable String prefix) {
+        return SingleResponse.of(terminalModelService.get(prefix));
+
     }
 
     @Transactional
     @PostMapping(value = "/create", produces = "application/json")
-    public void create(@RequestBody TerminalModelCreateDto createDto) {
+    public SingleResponse create(@RequestBody TerminalModelCreateDto createDto) {
         terminalModelService.create(createDto);
+        return SingleResponse.empty();
     }
 
     @Transactional
     @PutMapping("/update")
-    public void update(@RequestBody TerminalModelUpdateDto updateDto) {
+    public SingleResponse update(@RequestBody TerminalModelUpdateDto updateDto) {
         terminalModelService.update(updateDto);
+        return SingleResponse.empty();
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    @PostMapping(value = "/get-all", produces = "application/json")
-    public ListResponse getAll(@RequestBody TerminalModelPageableSearch pageableSearch) {
+    @GetMapping(value = "/get-all", produces = "application/json")
+    public ListResponse getAll(TerminalModelPageableSearch pageableSearch) {
         Page<TerminalModel> pageable = terminalModelService.getAll(pageableSearch);
         return new ListResponse(pageable.getTotalElements(),
                 pageable.stream().map(this::getMap).toList());
     }
 
-    @PostMapping("/delete")
+    @DeleteMapping("/delete")
     @Transactional
-    public void delete(@RequestBody TerminalModel terminalModel) {
+    public SingleResponse delete(@RequestBody TerminalModel terminalModel) {
         terminalModelService.deleteById(terminalModel.getId());
+        return SingleResponse.empty();
     }
 
     private Map<String, String> getMap(TerminalModel terminalModel) {
