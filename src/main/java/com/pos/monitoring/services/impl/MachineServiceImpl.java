@@ -110,11 +110,11 @@ public class MachineServiceImpl implements MachineService {
 
     @Override
     public SingleResponse getStat(String instId) {
-        List<Map<String, Object>> stat = machineRepository.getStat(instId);
+        List<Map<String, Object>> stateMap = machineRepository.getState(instId);
         Map<String, Long> map = new HashMap<>();
         map.put("allTerminal", 0L);
         map.put("hasContractTerminal", 0L);
-        for (Map<String, Object> objectMap : stat) {
+        for (Map<String, Object> objectMap : stateMap) {
             Short state = (Short) objectMap.get("state");
             Long number = (Long) objectMap.get("number");
             convert(map, MachineState.values()[state], number);
@@ -126,7 +126,7 @@ public class MachineServiceImpl implements MachineService {
     public ListResponse getInformationByInstId(MachineFilterDto filterDto) {
         List<Map<String, String>> instId = machineRepository.getByInstId(filterDto.getInstId());
         int total = instId.size();
-        return ListResponse.of(instId.stream().skip(filterDto.getPageNumber()).limit(filterDto.getPageSize()).collect(Collectors.toList()),total);
+        return ListResponse.of(instId.stream().skip(filterDto.getPageNumber()).limit(filterDto.getPageSize()).collect(Collectors.toList()), total);
     }
 
     private void convert(Map<String, Long> map, MachineState state, Long count) {

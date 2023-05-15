@@ -7,5 +7,5 @@ import java.util.Map;
 
 public interface RestTemplates {
 
-    <T> ResponseEntity<T> execute(String url, HttpMethod method, Map<String, String> headerData, Map<String, Object> body, Class<T> t);
+    <T> ResponseEntity<T> executeWithBasic(String url, HttpMethod method, Map<String, String> headerData, Map<String, Object> body, Class<T> t);
 }
