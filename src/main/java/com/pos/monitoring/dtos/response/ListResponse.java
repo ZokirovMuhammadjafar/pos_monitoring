@@ -12,7 +12,7 @@ import java.util.function.Function;
 
 import static com.pos.monitoring.utils.ReflectionUtils.loopObjectFields;
 
-public final class ListResponse extends Response{
+public final class ListResponse extends Response {
     private int total;
     private List<Data> data;
 
@@ -32,10 +32,8 @@ public final class ListResponse extends Response{
             loopObjectFields(clazz, a, apply);
             Class loop = clazz;
             while (!loop.getSuperclass().equals(Object.class)) {
-                loop = clazz.getSuperclass();
-                for (Field declaredField : loop.getDeclaredFields()) {
-                    loopObjectFields(loop, declaredField, apply);
-                }
+                loop = loop.getSuperclass();
+                loopObjectFields(loop, a, apply);
             }
             return apply;
         }).toList();
@@ -51,10 +49,8 @@ public final class ListResponse extends Response{
             loopObjectFields(clazz, a, apply);
             Class loop = clazz;
             while (!loop.getSuperclass().equals(Object.class)) {
-                loop = clazz.getSuperclass();
-                for (Field declaredField : loop.getDeclaredFields()) {
-                    loopObjectFields(loop, declaredField, apply);
-                }
+                loop = loop.getSuperclass();
+                loopObjectFields(loop, a, apply);
             }
             return apply;
         }).toList();

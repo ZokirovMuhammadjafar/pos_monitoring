@@ -30,24 +30,17 @@ public class Machine extends AbstractEntity {
     protected String merchantId;
     @Column
     protected String terminalId;
+    @Enumerated(value = EnumType.STRING)
     protected Soft soft;
     protected String model;
     protected String prefix;
     protected Boolean isContract = false;
-    @Enumerated(EnumType.ORDINAL)
+
+    @Enumerated(value = EnumType.ORDINAL)
     protected MachineState state = MachineState.HAS_ERROR;
 
     @Override
     public String toString() {
-        return "Machine{" +
-                "srNumber='" + srNumber + '\'' +
-                ", instId='" + instId + '\'' +
-                ", branchMfo='" + branchMfo + '\'' +
-                ", merchantId='" + merchantId + '\'' +
-                ", terminalId='" + terminalId + '\'' +
-                ", prefix='" + prefix + '\'' +
-                ", isContract=" + isContract +
-                ", state=" + state +
-                '}';
+        return "Machine{" + "srNumber='" + srNumber + '\'' + ", instId='" + instId + '\'' + ", branchMfo='" + branchMfo + '\'' + ", merchantId='" + merchantId + '\'' + ", terminalId='" + terminalId + '\'' + ", prefix='" + prefix + '\'' + ", isContract=" + isContract + ", state=" + state + '}';
     }
 }

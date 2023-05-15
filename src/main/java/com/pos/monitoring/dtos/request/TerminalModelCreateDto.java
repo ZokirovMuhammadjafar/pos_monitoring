@@ -12,7 +12,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TerminalModelCreateDto implements Serializable {
-
     private String name;
     private String prefix;
     private Boolean valid;

@@ -20,9 +20,9 @@ public abstract class AbstractEntity implements Serializable {
     protected Date updateDate;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    protected Long id;
     @Column(name = "deleted", columnDefinition = "boolean default false")
-    private boolean deleted;
+    protected boolean deleted;
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

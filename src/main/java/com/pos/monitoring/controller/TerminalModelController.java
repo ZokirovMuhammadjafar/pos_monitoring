@@ -52,7 +52,8 @@ public class TerminalModelController {
     @GetMapping(value = "/get-all", produces = "application/json")
     public ListResponse getAll(TerminalModelPageableSearch pageableSearch) {
         Page<TerminalModel> pageable = terminalModelService.getAll(pageableSearch);
-        return ListResponse.of(pageable,TerminalModel.class);
+        ListResponse of = ListResponse.of(pageable, TerminalModel.class);
+        return of;
     }
 
     @DeleteMapping("/delete")

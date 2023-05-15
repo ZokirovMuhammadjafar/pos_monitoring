@@ -1,5 +1,7 @@
 package com.pos.monitoring.controller;
 
+import com.pos.monitoring.dtos.pageable.MachineFilterDto;
+import com.pos.monitoring.dtos.response.ListResponse;
 import com.pos.monitoring.dtos.response.SingleResponse;
 import com.pos.monitoring.services.MachineService;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +23,10 @@ public class MachinesController {
         return all;
     }
 
-//    @GetMapping("/all-by-mfo")
-//    public ListResponse getByMfoByInstId(MachineFilterDto filterDto) {
-//        ListResponse listResponse = machineService.getInformationByInstId(filterDto);
-//    }
+    @GetMapping("/all-by-mfo")
+    public ListResponse getByMfoByInstId(MachineFilterDto filterDto) {
+        ListResponse listResponse = machineService.getInformationByInstId(filterDto);
+        return listResponse;
+    }
 
 }

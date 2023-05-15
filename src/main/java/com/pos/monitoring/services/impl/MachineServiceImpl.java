@@ -1,8 +1,8 @@
 package com.pos.monitoring.services.impl;
 
+import com.pos.monitoring.dtos.pageable.MachineFilterDto;
 import com.pos.monitoring.dtos.response.ListResponse;
 import com.pos.monitoring.dtos.response.SingleResponse;
-import com.pos.monitoring.dtos.pageable.MachineFilterDto;
 import com.pos.monitoring.entities.*;
 import com.pos.monitoring.repositories.BranchRepository;
 import com.pos.monitoring.repositories.MachineRepository;
@@ -32,6 +32,38 @@ public class MachineServiceImpl implements MachineService {
     private final BranchRepository branchRepository;
     private final MachineHistoryService machineHistoryService;
     private final TerminalModelRepository terminalModelRepository;
+
+    private synchronized static void create(Machine machine, TerminalModel validPrefix) {
+        if (machine.getIsContract()) {
+            if (machine.getTerminalId() != null && machine.getMerchantId() != null && machine.getInstId() != null) {
+                if (validPrefix.getValid()) {
+                    machine.setState(MachineState.HAS_CONTRACT_WITH_7003);
+                } else {
+                    machine.setState(MachineState.HAS_CONTRACT_NOT_7003);
+                }
+            } else if (machine.getTerminalId() == null && machine.getMerchantId() == null && machine.getInstId() != null) {
+                if (validPrefix.getValid()) {
+                    machine.setState(MachineState.HAS_CONTRACT_STAY_WAREHOUSE);
+                } else {
+                    machine.setState(MachineState.HAS_CONTRACT_NOT_7003);
+                }
+            }
+        } else {
+            if (machine.getTerminalId() != null && machine.getMerchantId() != null && machine.getInstId() != null) {
+                if (validPrefix.getValid()) {
+                    machine.setState(MachineState.HAS_NOT_CONTRACT_WORKING_7003);
+                } else {
+                    machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
+                }
+            } else if (machine.getTerminalId() == null && machine.getMerchantId() == null && machine.getInstId() != null) {
+                if (validPrefix.getValid()) {
+                    machine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
+                } else {
+                    machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
+                }
+            }
+        }
+    }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -92,8 +124,9 @@ public class MachineServiceImpl implements MachineService {
 
     @Override
     public ListResponse getInformationByInstId(MachineFilterDto filterDto) {
-//        branchRepository
-        return null;
+        List<Map<String, String>> instId = machineRepository.getByInstId(filterDto.getInstId());
+        int total = instId.size();
+        return ListResponse.of(instId.stream().skip(filterDto.getPageNumber()).limit(filterDto.getPageSize()).collect(Collectors.toList()),total);
     }
 
     private void convert(Map<String, Long> map, MachineState state, Long count) {
@@ -128,8 +161,8 @@ public class MachineServiceImpl implements MachineService {
             System.out.println(machine.getPrefix());
             return;
         }
-        if(machine.getSoft()==null&&validPrefix.getName().contains("920")){
-           machine.setSoft(Soft.UZPOS);
+        if (machine.getSoft() == null && validPrefix.getName().contains("920")) {
+            machine.setSoft(Soft.UZPOS);
         }
         machine.setModel(validPrefix.getName());
         if (oldMachine == null) {
@@ -201,38 +234,6 @@ public class MachineServiceImpl implements MachineService {
             oldMachine.setSoft(machine.getSoft());
             oldMachine.setModel(machine.getModel());
             machineRepository.saveAndFlush(oldMachine);
-        }
-    }
-
-    private synchronized static void create(Machine machine, TerminalModel validPrefix) {
-        if (machine.getIsContract()) {
-            if (machine.getTerminalId() != null && machine.getMerchantId() != null && machine.getInstId() != null) {
-                if (validPrefix.getValid()) {
-                    machine.setState(MachineState.HAS_CONTRACT_WITH_7003);
-                } else {
-                    machine.setState(MachineState.HAS_CONTRACT_NOT_7003);
-                }
-            } else if (machine.getTerminalId() == null && machine.getMerchantId() == null && machine.getInstId() != null) {
-                if (validPrefix.getValid()) {
-                    machine.setState(MachineState.HAS_CONTRACT_STAY_WAREHOUSE);
-                } else {
-                    machine.setState(MachineState.HAS_CONTRACT_NOT_7003);
-                }
-            }
-        } else {
-            if (machine.getTerminalId() != null && machine.getMerchantId() != null && machine.getInstId() != null) {
-                if (validPrefix.getValid()) {
-                    machine.setState(MachineState.HAS_NOT_CONTRACT_WORKING_7003);
-                } else {
-                    machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
-                }
-            } else if (machine.getTerminalId() == null && machine.getMerchantId() == null && machine.getInstId() != null) {
-                if (validPrefix.getValid()) {
-                    machine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
-                } else {
-                    machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
-                }
-            }
         }
     }
 
