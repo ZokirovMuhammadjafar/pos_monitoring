@@ -67,8 +67,8 @@ public class MachineServiceImpl implements MachineService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void synchronize() {
-        List<Machine> allChangeMachines = connection8005.getAllChangeMachines();
+    public void synchronize(int i) {
+        List<Machine> allChangeMachines = connection8005.getAllMachinesFirst(i);
         for (Machine machine : allChangeMachines) {
             String branchMfo = machine.getBranchMfo();
             if (branchMfo != null) {

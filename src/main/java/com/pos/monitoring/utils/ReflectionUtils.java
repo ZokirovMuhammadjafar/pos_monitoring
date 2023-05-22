@@ -22,7 +22,7 @@ public class ReflectionUtils {
                 if (genericType.getTypeName().equals(String.class.getName())) {
                     field.set(objects, object);
                 } else if (genericType.getTypeName().equals(Integer.class.getName())) {
-                    field.set(objects, object);
+                    field.set(objects, Integer.valueOf(object+""));
                 } else if (genericType.getTypeName().equals(Long.class.getName())) {
                     field.set(objects, Long.valueOf((String) object));
                 } else if (genericType.getTypeName().equals(LocalDateTime.class.getName())) {

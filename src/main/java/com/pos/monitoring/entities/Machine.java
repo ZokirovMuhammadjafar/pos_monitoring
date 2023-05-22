@@ -34,6 +34,8 @@ public class Machine extends AbstractEntity {
     protected Soft soft;
     protected String model;
     protected String prefix;
+    protected Integer fixedCount;
+    protected Integer authCount;
     protected Boolean isContract = false;
 
     @Enumerated(value = EnumType.ORDINAL)
