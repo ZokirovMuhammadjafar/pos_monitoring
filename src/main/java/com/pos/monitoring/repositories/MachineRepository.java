@@ -1,6 +1,7 @@
 package com.pos.monitoring.repositories;
 
 import com.pos.monitoring.entities.Machine;
+import com.pos.monitoring.entities.MachineState;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -58,4 +59,9 @@ public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
             group by sd.mfo;
              """,nativeQuery = true)
     List<Map<String,String>> getByInstId(String instId);
+
+    @Query(value = "select m.state as state,count(m.state) as number from machines m where m.inst_id= ?1 group by m.state", nativeQuery = true)
+    List<Map<String, Object>> getState(String instId);
+
+    List<Machine> findAllByState(MachineState state);
 }
