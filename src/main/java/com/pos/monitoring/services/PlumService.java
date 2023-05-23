@@ -4,5 +4,7 @@ public interface PlumService {
 
     void dailySynchronizeAmount();
 
-    void getDailyTransactionDetail(String terminalId, String merchantId);
+    void getDailyTransactionDetail();
+
+    void getDailyTransactionCount();
 }
