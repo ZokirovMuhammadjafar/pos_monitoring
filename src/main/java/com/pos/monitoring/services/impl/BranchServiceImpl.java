@@ -25,7 +25,7 @@ public class BranchServiceImpl implements BranchService {
     public List<Branch> getAllByInstId(String instId) {
         Branch parentBranch = branchRepository.findByMfoAndDeletedFalse(instId);
         if(parentBranch==null){
-            throw new ValidatorException("PARENT_BRANCH_NOT_FOUND");
+            throw new ValidatorException("PARENT_ENTITY_NOT_FOUND");
         }
         List<Branch> listChildBranches = branchRepository.findByParentAndDeletedFalse(parentBranch);
         return listChildBranches;

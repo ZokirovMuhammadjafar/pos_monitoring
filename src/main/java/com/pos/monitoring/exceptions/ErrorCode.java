@@ -1,7 +1,6 @@
 package com.pos.monitoring.exceptions;
 
 public enum ErrorCode {
-
     ENTITY_NOT_FOUND,
     SERVER_ERROR_FROM8005,
     SERVER_ERROR_FROM_PLUM,

@@ -6,12 +6,16 @@ import com.pos.monitoring.services.jobs.JobService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.MessageSource;
 
 import java.lang.reflect.Field;
+import java.util.Locale;
 
 @SpringBootTest
 class PosMonitoringApplicationTests {
 
+	@Autowired
+	private MessageSource messageSource;
 	@Autowired
 	private Connection8005 connection8005;
 	@Autowired
@@ -38,6 +42,7 @@ class PosMonitoringApplicationTests {
 //	}
 	@Test
 	void machineTestUpdate(){
+		System.out.println(messageSource.getMessage("ENTITY_NOT_FOUND", new Object[]{1L}, Locale.forLanguageTag("uz")));
 //		jobService.synchronizeMachine();
 	}
 

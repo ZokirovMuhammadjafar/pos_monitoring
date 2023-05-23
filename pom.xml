@@ -97,6 +97,7 @@
             <artifactId>postgresql</artifactId>
             <version>42.5.4</version>
         </dependency>
+
         <!--helper dependency to create addition method and classes-->
         <dependency>
             <groupId>org.mapstruct</groupId>

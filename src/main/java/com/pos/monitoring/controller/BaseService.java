@@ -2,8 +2,10 @@ package com.pos.monitoring.controller;
 
 import com.auth0.jwt.JWT;
 import com.pos.monitoring.dtos.response.SingleResponse;
+import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.utils.JWTUtil;
 import jakarta.validation.constraints.NotNull;
+import jakarta.xml.bind.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,12 +27,19 @@ public class BaseService {
         if(user.password.equals(PASSWORD)&&user.username.equals(USERNAME)){
             return new SingleResponse(200, Map.of("token",accessToken(user.password(),-1L)));
         }else {
-            return new SingleResponse("Authentication failed not found",400);
+            throw new ValidatorException("AUTHENTICATION_FAILED");
         }
 
     }
     private String accessToken(String username, Long id) {
-        String access = JWT.create().withIssuer(util.getIssuerAccess()).withSubject("access").withExpiresAt(util.getExpireDate()).withClaim("username", username).withClaim("id", id).sign(util.getAlgorithm());
+        String access = JWT
+                .create()
+                .withIssuer(util.getIssuerAccess())
+                .withSubject("access")
+                .withExpiresAt(util.getExpireDate())
+                .withClaim("username", username)
+                .withClaim("id", id)
+                .sign(util.getAlgorithm());
         return access;
     }
 

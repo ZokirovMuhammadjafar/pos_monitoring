@@ -14,7 +14,7 @@ public interface TerminalModelRepository extends SoftDeleteJpaRepository<Termina
     TerminalModel findByPrefixAndDeleted(String name, boolean deleted);
 
     @Modifying
-    @Query(value = "update TerminalModel  set deleted = true , updateDate = current_timestamp  where id =  :id ")
+    @Query(value = "update TerminalModel  set deleted = true , updateDate = current_timestamp  where id =  :id")
     void deleteTerminal(@Param(value = "id") Long id);
 
 

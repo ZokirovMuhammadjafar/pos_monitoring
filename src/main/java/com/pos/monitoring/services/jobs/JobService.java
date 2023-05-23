@@ -20,12 +20,12 @@ public class JobService {
         System.out.println("------------ Branches end synchronization------------");
     }
 
-    @Scheduled(cron = "0 21 9 * * *")
+    @Scheduled(cron = "0 32 9 * * *")
     public void synchronizeMachine() throws InterruptedException {
         System.out.println("------------ Machines start synchronization------------");
         for (int i=0;i<600_000;i=i+100){
             machineService.synchronize(i);
-            Thread.sleep(100);
+            System.out.println(i);
         }
 
         System.out.println("------------ Machines end synchronization------------");

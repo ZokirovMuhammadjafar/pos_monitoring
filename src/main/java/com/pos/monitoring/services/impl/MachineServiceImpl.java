@@ -11,6 +11,8 @@ import com.pos.monitoring.repositories.system.Connection8005;
 import com.pos.monitoring.services.MachineHistoryService;
 import com.pos.monitoring.services.MachineService;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,11 +29,11 @@ import java.util.stream.Collectors;
 public class MachineServiceImpl implements MachineService {
 
     private final Connection8005 connection8005;
-
     private final MachineRepository machineRepository;
     private final BranchRepository branchRepository;
     private final MachineHistoryService machineHistoryService;
     private final TerminalModelRepository terminalModelRepository;
+    Logger logger = LogManager.getLogger(MachineServiceImpl.class);
 
     private synchronized static void create(Machine machine, TerminalModel validPrefix) {
         if (machine.getIsContract()) {
@@ -74,18 +76,15 @@ public class MachineServiceImpl implements MachineService {
             if (branchMfo != null) {
                 Branch branch = branchRepository.findByMfoAndDeletedFalse(branchMfo);
                 if (branch == null) {
-                    System.out.println("branch topilmadi  ===  >>>" + branchMfo);
-                    // TODO: 3/13/2023 shuni telegram bot orqali jonatib qoyish kerak mfo tid mid
+                    logger.error("branch topilmadi  ===  >>> {}", branchMfo);
                     continue;
                 }
                 machine.setBranch(branch);
             }
             if (machine.getSrNumber() != null && machine.getSrNumber().length() <= 3) {
-                System.err.println("mavhinada xatolik ===>>>>   " + machine.toString());
-                // TODO: 3/13/2023 shuni telegramga tashlab qoyish kerak branch va tid mid sr
+                logger.error("machinada xatolik ===>>>>  {} ", machine.toString());
                 continue;
             }
-            System.out.println(machine.toString());
             machine.setPrefix(machine.getSrNumber().substring(0, 3));
             stateChoose(machine);
         }
@@ -113,6 +112,8 @@ public class MachineServiceImpl implements MachineService {
         List<Map<String, Object>> stateMap = machineRepository.getState(instId);
         Map<String, Long> map = new HashMap<>();
         map.put("allTerminal", 0L);
+        map.put("notWorking", 0L);
+        map.put("working", 0L);
         map.put("hasContractTerminal", 0L);
         for (Map<String, Object> objectMap : stateMap) {
             Short state = (Short) objectMap.get("state");
@@ -126,26 +127,32 @@ public class MachineServiceImpl implements MachineService {
     public ListResponse getInformationByInstId(MachineFilterDto filterDto) {
         List<Map<String, String>> instId = machineRepository.getByInstId(filterDto.getInstId());
         int total = instId.size();
-        return ListResponse.of(instId.stream().skip(filterDto.getPageNumber()).limit(filterDto.getPageSize()).collect(Collectors.toList()), total);
+        return ListResponse.of
+                (
+                         instId
+                        .stream()
+                        .skip(filterDto.getPageNumber())
+                        .limit(filterDto.getPageSize())
+                        .collect(Collectors.toList()), total
+                );
     }
 
     private void convert(Map<String, Long> map, MachineState state, Long count) {
         switch (state) {
-            case HAS_CONTRACT_WITH_7003 -> {
-                map.put("working", count);
+            case HAS_CONTRACT_WITH_7003 -> {//0
+                map.put("working", map.get("working") + count);
                 map.put("allTerminal", map.get("allTerminal") + count);
                 map.put("hasContractTerminal", map.get("hasContractTerminal") + count);
             }
-            case HAS_CONTRACT_STAY_WAREHOUSE -> {
-                map.put("notWorking", count);
+            case HAS_CONTRACT_STAY_WAREHOUSE, HAS_CONTRACT_NOT_7003 -> {//4
+                map.put("notWorking", map.get("notWorking") + count);
                 map.put("allTerminal", map.get("allTerminal") + count);
                 map.put("hasContractTerminal", map.get("hasContractTerminal") + count);
             }
-            case HAS_NOT_CONTRACT_WORKING_7003 -> {
-                map.put("notContractWorking", count);
+            case HAS_NOT_CONTRACT_WORKING_7003 -> {//3
                 map.put("allTerminal", map.get("allTerminal") + count);
             }
-            case HAS_NOT_CONTRACT_STAY_WAREHOUSE -> {
+            case HAS_NOT_CONTRACT_STAY_WAREHOUSE -> {//6
                 map.put("notContractNotWorking", count);
                 map.put("allTerminal", map.get("allTerminal") + count);
             }
@@ -157,8 +164,7 @@ public class MachineServiceImpl implements MachineService {
         TerminalModel validPrefix = terminalModelRepository.findByPrefixAndDeleted(machine.getPrefix(), false);
         Machine oldMachine = machineRepository.findBySrNumberAndDeleted(machine.getSrNumber(), false);
         if (validPrefix == null) {
-            // TODO: 3/14/2023 telegramga log tashlash kerak
-            System.out.println(machine.getPrefix());
+            logger.error("prefix yoq === >>> {} ", machine.getPrefix());
             return;
         }
         if (machine.getSoft() == null && validPrefix.getName().contains("920")) {

@@ -4,6 +4,7 @@ import com.pos.monitoring.dtos.pageable.TerminalModelPageableSearch;
 import com.pos.monitoring.dtos.request.TerminalModelCreateDto;
 import com.pos.monitoring.dtos.request.TerminalModelUpdateDto;
 import com.pos.monitoring.entities.TerminalModel;
+import com.pos.monitoring.exceptions.ParameterException;
 import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.repositories.TerminalModelRepository;
 import com.pos.monitoring.services.MachineService;
@@ -28,7 +29,7 @@ public class TerminalModelServiceImpl implements TerminalModelService {
     @Override
     public void create(TerminalModelCreateDto createDto) {
         if (createDto.getPrefix() == null) {
-            throw new ValidatorException("prefix kiritilmagan");
+            throw new ParameterException("PARAM_DTO_ERROR",TerminalModelCreateDto.class.getName(),"prefix");
         }
         if (createDto.getName() == null) {
             throw new ValidatorException("name kiritilmagan");
@@ -53,7 +54,7 @@ public class TerminalModelServiceImpl implements TerminalModelService {
             if (!ObjectUtils.isEmpty(pageableSearch.getPrefix())) {
                 predicates.add(cb.like(root.get("prefix"), DaoUtils.toLikeCriteria(pageableSearch.getPrefix())));
             }
-            predicates.add(cb.equal(root.get("deleted"),Boolean.FALSE));
+            predicates.add(cb.equal(root.get("deleted"), Boolean.FALSE));
             return cb.and(predicates.toArray(new Predicate[0]));
         }, DaoUtils.toPaging(pageableSearch));
     }
@@ -75,10 +76,10 @@ public class TerminalModelServiceImpl implements TerminalModelService {
     @Override
     public void deleteById(Long id) {
         if (id == null) {
-            throw new ValidatorException("ID CAME NULL");
+            throw new ValidatorException("ID_IS_NULL");
         }
         TerminalModel terminalModel = terminalModelRepository.findById(id).orElseThrow(() -> {
-            throw new ValidatorException("TERMINAL MODEL NOT FOUND ID = " + id);
+            throw new ValidatorException("TERMINAL_MODEL_NOT_FOUND", List.of(id));
         });
         terminalModelRepository.deleteTerminal(terminalModel.getId());
         machineService.deleteByPrefix(terminalModel.getPrefix());
@@ -87,7 +88,7 @@ public class TerminalModelServiceImpl implements TerminalModelService {
     @Override
     public void update(TerminalModelUpdateDto updateDto) {
         TerminalModel terminalModel = terminalModelRepository.findById(updateDto.getId()).orElseThrow(() -> {
-            throw new ValidatorException("TERMINAL MODEL NOT FOUND ID = " + updateDto.getId());
+            throw new ValidatorException("TERMINAL_MODEL_NOT_FOUND", List.of(updateDto.getId()));
         });
         if (updateDto.getName() != null) {
             terminalModel.setName(updateDto.getName());
