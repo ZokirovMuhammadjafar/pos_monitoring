@@ -27,7 +27,6 @@ public class BranchServiceImpl implements BranchService {
         if(parentBranch==null){
             throw new ValidatorException("PARENT_BRANCH_NOT_FOUND");
         }
-        List<Branch> listChildBranches = branchRepository.findByParentAndDeletedFalse(parentBranch);
-        return listChildBranches;
+        return branchRepository.findByParentAndDeletedFalse(parentBranch);
     }
 }

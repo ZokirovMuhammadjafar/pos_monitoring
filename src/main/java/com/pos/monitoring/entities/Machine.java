@@ -8,6 +8,8 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.util.Date;
+
 @Getter
 @Setter
 @Entity
@@ -36,6 +38,10 @@ public class Machine extends AbstractEntity {
     protected String prefix;
     protected Integer fixedCount;
     protected Integer authCount;
+    protected Integer transactionCount;
+    @Temporal(value = TemporalType.DATE)
+    protected Date transactionDate;
+
     protected Boolean isContract = false;
 
     @Enumerated(value = EnumType.ORDINAL)

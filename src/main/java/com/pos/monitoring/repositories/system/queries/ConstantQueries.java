@@ -19,7 +19,7 @@ public interface ConstantQueries {
                          m.creation_date > current_timestamp - interval '1 day')) as t;
             """;
 
-    String GET_ALL_MACHINES_FIRST = """
+    String GET_MACHINES_BY_100 = """
             select t.*,
                    checker(inst_id := t.inst_id, sr_number := t.sr_number)                           as is_contract,
                    (select count(a) from auth_code a where a.sr_number = t.sr_number)::int           as auth_count,

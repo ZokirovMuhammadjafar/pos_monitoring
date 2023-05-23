@@ -3,6 +3,8 @@ package com.pos.monitoring.services.impl;
 import com.pos.monitoring.dtos.request.plum.PDailyTransactionRequestDto;
 import com.pos.monitoring.dtos.response.plum.PDailyTransactionDto;
 import com.pos.monitoring.dtos.response.plum.PDailyTransactionResponseDto;
+import com.pos.monitoring.dtos.response.plum.PlumDailyTransactionCountDto;
+import com.pos.monitoring.dtos.response.plum.PlumDailyTransactionCountsDto;
 import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.entities.MachineState;
 import com.pos.monitoring.entities.Transaction;
@@ -30,6 +32,9 @@ public class PlumServiceImpl implements PlumService {
     @Value("${plum.total-amount-url}")
     public String TOTAL_AMOUNT_URL;
 
+    @Value("${plum.total-count-url}")
+    public String TOTAL_COUNT_URL;
+
     @Value("${plum.organizationInn}")
     public String ORGANIZATION_INN;
 
@@ -47,11 +52,7 @@ public class PlumServiceImpl implements PlumService {
         Map<String, String> headerData = new HashMap<>();
         headerData.put(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
-        Date yesterday = TimeUtils.minus(new Date(), Calendar.DATE, 1);
-        Map<String, Object> body = new HashMap<>();
-        body.put("organizationTin", ORGANIZATION_INN);
-        body.put("dateFrom", TimeUtils.fromDate(yesterday));
-        body.put("dateTo", TimeUtils.toDate(yesterday));
+        Map<String, Object> body = convertToBody();
 
         for (Machine machine : machines) {
             if (ObjectUtils.isEmpty(machine.getTerminalId()) || ObjectUtils.isEmpty(machine.getMerchantId())) {
@@ -73,18 +74,56 @@ public class PlumServiceImpl implements PlumService {
     }
 
     @Override
-    public void getDailyTransactionDetail(String terminalId, String merchantId) {
-        if (ObjectUtils.isEmpty(terminalId) || ObjectUtils.isEmpty(merchantId)) {
+    public void getDailyTransactionDetail() {
+
+        Map<String, Object> body = convertToBody();
+    }
+
+    @Override
+    public void getDailyTransactionCount() {
+        Map<String, String> header = getHeader();
+        Map<String, Object> body = convertToBody();
+
+        List<Machine> machines = machineRepository.findAllByState(MachineState.HAS_CONTRACT_WITH_7003);
+        if (machines.isEmpty()) {
             return;
         }
 
+        PDailyTransactionRequestDto requestItemDto = new PDailyTransactionRequestDto();
+        for (Machine machine : machines) {
+            if (ObjectUtils.isEmpty(machine.getTerminalId()) || ObjectUtils.isEmpty(machine.getMerchantId())) {
+                continue;
+            }
+
+            requestItemDto.setMerchantId(machine.getMerchantId());
+            requestItemDto.setTerminalId(machine.getTerminalId());
+            body.put("terminals", List.of(requestItemDto));
+
+            ResponseEntity<PlumDailyTransactionCountsDto> responseEntity = restTemplates.executeWithBasic(TOTAL_COUNT_URL, HttpMethod.POST, header, body, PlumDailyTransactionCountsDto.class);
+
+            PlumDailyTransactionCountsDto responseBody = responseEntity.getBody();
+            if (!ObjectUtils.isEmpty(responseBody)) {
+                PlumDailyTransactionCountDto data = responseBody.getData();
+                Integer totalCount = data.getTotalCount();
+                machine.setTransactionCount(totalCount);
+                machine.setTransactionDate(new Date());
+                machineRepository.saveAndFlush(machine);
+            }
+        }
+    }
+
+    private Map<String, String> getHeader() {
         Map<String, String> headerData = new HashMap<>();
         headerData.put(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        return headerData;
+    }
 
+    private Map<String, Object> convertToBody() {
         Date yesterday = TimeUtils.minus(new Date(), Calendar.DATE, 1);
         Map<String, Object> body = new HashMap<>();
         body.put("organizationTin", ORGANIZATION_INN);
         body.put("dateFrom", TimeUtils.fromDate(yesterday));
         body.put("dateTo", TimeUtils.toDate(yesterday));
+        return body;
     }
 }

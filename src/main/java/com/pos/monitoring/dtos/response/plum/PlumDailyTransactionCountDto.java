@@ -5,7 +5,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PDailyTransactionResponseDto extends PlumBaseDto {
+public class PlumDailyTransactionCountDto {
 
-    private PDailyTransactionsDto data;
+    private String requestId;
+
+    private Integer totalCount;
 }

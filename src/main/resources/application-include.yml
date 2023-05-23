@@ -47,5 +47,6 @@ basic:
   password: Xt@$3k5vgv9YUsQvF2PujhX%B
 
 plum:
-  organizationInn: 302936161
+  organizationInn: 999999999
   total-amount-url: https://edo.uzcardtrade.uz/api-monitoring/Banking/getTotalAmounts
+  total-count-url: https://edo.uzcardtrade.uz/api-monitoring/Banking/getTotalCount

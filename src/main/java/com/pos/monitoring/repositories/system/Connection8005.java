@@ -27,7 +27,6 @@ public class Connection8005 {
     private Connection connection;
 
 
-
     @SneakyThrows
     public List<Machine> getAllChangeMachines() {
         if (ObjectUtils.isEmpty(connection)) {
@@ -36,7 +35,7 @@ public class Connection8005 {
         PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_ALL_CHANGE_MACHINES);
 
         List<Map<String, Object>> list = getResultQuery(preparedStatement);
-        return ReflectionUtils.mapToClassList(list,Machine.class);
+        return ReflectionUtils.mapToClassList(list, Machine.class);
     }
 
     private List<Map<String, Object>> getResultQuery(PreparedStatement preparedStatement) throws SQLException {
@@ -63,7 +62,7 @@ public class Connection8005 {
             e.printStackTrace();
         } finally {
             connection.close();
-            connection=null;
+            connection = null;
         }
         return list;
     }
@@ -71,10 +70,10 @@ public class Connection8005 {
     @SneakyThrows
     public List<Machine> getAllMachinesFirst(int a) {
         getConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_ALL_MACHINES_FIRST);
-        preparedStatement.setInt(1,a);
+        PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_MACHINES_BY_100);
+        preparedStatement.setInt(1, a);
         List<Map<String, Object>> list = getResultQuery(preparedStatement);
-        return ReflectionUtils.mapToClassList(list,Machine.class);
+        return ReflectionUtils.mapToClassList(list, Machine.class);
     }
 
 
