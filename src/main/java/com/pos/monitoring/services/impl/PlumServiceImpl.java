@@ -14,11 +14,15 @@ import com.pos.monitoring.services.PlumService;
 import com.pos.monitoring.services.system.RestTemplates;
 import com.pos.monitoring.utils.TimeUtils;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
 import java.util.*;
@@ -29,18 +33,16 @@ import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 @RequiredArgsConstructor
 public class PlumServiceImpl implements PlumService {
 
-    @Value("${plum.total-amount-url}")
-    public String TOTAL_AMOUNT_URL;
-
-    @Value("${plum.total-count-url}")
-    public String TOTAL_COUNT_URL;
-
-    @Value("${plum.organizationInn}")
-    public String ORGANIZATION_INN;
-
     private final RestTemplates restTemplates;
     private final MachineRepository machineRepository;
     private final TransactionRepository transactionRepository;
+    @Value("${plum.total-amount-url}")
+    public String TOTAL_AMOUNT_URL;
+    @Value("${plum.total-count-url}")
+    public String TOTAL_COUNT_URL;
+    @Value("${plum.organizationInn}")
+    public String ORGANIZATION_INN;
+    Logger logger = LogManager.getLogger(PlumServiceImpl.class);
 
     @Override
     public void dailySynchronizeAmount() {
@@ -80,6 +82,7 @@ public class PlumServiceImpl implements PlumService {
     }
 
     @Override
+    @Transactional
     public void getDailyTransactionCount() {
         Map<String, String> header = getHeader();
         Map<String, Object> body = convertToBody();
@@ -90,25 +93,31 @@ public class PlumServiceImpl implements PlumService {
         }
 
         PDailyTransactionRequestDto requestItemDto = new PDailyTransactionRequestDto();
-        for (Machine machine : machines) {
-            if (ObjectUtils.isEmpty(machine.getTerminalId()) || ObjectUtils.isEmpty(machine.getMerchantId())) {
-                continue;
+
+        for (int i = 0; i < machines.size(); i++) {
+            Machine machine = machines.get(i);
+            if (!ObjectUtils.isEmpty(machine.getTerminalId()) && !ObjectUtils.isEmpty(machine.getMerchantId())) {
+                long begin=System.currentTimeMillis();
+                logger.info("sending request to plum machine sr_number = {} terminal_id={} merchant_id={} item={}", machine.getSrNumber(), machine.getTerminalId(), machine.getMerchantId(),i);
+                sendAndSaveTransaction(header, body, requestItemDto, machine);
+                logger.info("request have finished time = {}",System.currentTimeMillis()-begin);
             }
+        }
+    }
 
-            requestItemDto.setMerchantId(machine.getMerchantId());
-            requestItemDto.setTerminalId(machine.getTerminalId());
-            body.put("terminals", List.of(requestItemDto));
-
-            ResponseEntity<PlumDailyTransactionCountsDto> responseEntity = restTemplates.executeWithBasic(TOTAL_COUNT_URL, HttpMethod.POST, header, body, PlumDailyTransactionCountsDto.class);
-
-            PlumDailyTransactionCountsDto responseBody = responseEntity.getBody();
-            if (!ObjectUtils.isEmpty(responseBody)) {
-                PlumDailyTransactionCountDto data = responseBody.getData();
-                Integer totalCount = data.getTotalCount();
-                machine.setTransactionCount(totalCount);
-                machine.setTransactionDate(new Date());
-                machineRepository.saveAndFlush(machine);
-            }
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void sendAndSaveTransaction(Map<String, String> header, Map<String, Object> body, PDailyTransactionRequestDto requestItemDto, Machine machine) {
+        requestItemDto.setMerchantId(machine.getMerchantId());
+        requestItemDto.setTerminalId(machine.getTerminalId());
+        body.put("terminals", List.of(requestItemDto));
+        ResponseEntity<PlumDailyTransactionCountsDto> responseEntity = restTemplates.executeWithBasic(TOTAL_COUNT_URL, HttpMethod.POST, header, body, PlumDailyTransactionCountsDto.class);
+        PlumDailyTransactionCountsDto responseBody = responseEntity.getBody();
+        if (!ObjectUtils.isEmpty(responseBody)) {
+            PlumDailyTransactionCountDto data = responseBody.getData();
+            Integer totalCount = data.getTotalCount();
+            machine.setTransactionCount(totalCount);
+            machine.setTransactionDate(new Date());
+            machineRepository.saveAndFlush(machine);
         }
     }
 
