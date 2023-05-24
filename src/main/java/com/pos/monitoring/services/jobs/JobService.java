@@ -23,7 +23,7 @@ public class JobService {
     }
 
     //    @Scheduled(fixedDelay = 10000)
-    @Scheduled(cron = "0 0 1 * * *")
+    @Scheduled(cron = "0 20 9 * * *")
     public void synchronizeDailyTransactionCount() {
         System.out.println("------------ Transaction count start synchronization------------");
 
