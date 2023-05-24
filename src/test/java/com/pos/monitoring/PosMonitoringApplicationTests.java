@@ -42,7 +42,7 @@ class PosMonitoringApplicationTests {
 //	}
 	@Test
 	void machineTestUpdate(){
-		System.out.println(messageSource.getMessage("ENTITY_NOT_FOUND", new Object[]{1L}, Locale.forLanguageTag("uz")));
+		System.out.println(messageSource.getMessage("SERVER_ERROR_FROM_PLUM", new Object[]{"ASADA"}, Locale.forLanguageTag("uz")));
 //		jobService.synchronizeMachine();
 	}
 

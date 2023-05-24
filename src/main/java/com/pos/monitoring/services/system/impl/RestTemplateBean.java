@@ -1,5 +1,7 @@
 package com.pos.monitoring.services.system.impl;
 
+import com.pos.monitoring.exceptions.ErrorCode;
+import com.pos.monitoring.exceptions.LocalizedApplicationException;
 import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.services.system.RestTemplates;
 import lombok.RequiredArgsConstructor;
@@ -37,9 +39,8 @@ public class RestTemplateBean implements RestTemplates {
         try {
             return restTemplate.exchange(url, method, request, t);
         } catch (Exception e) {
-//            throw new LocalizedApplicationException(ErrorCode.SERVER_ERROR_FROM_PLUM, e.getCause());
-            logger.error("server connection error url = {} method = {} params = {}", url, method, headerData);
-            throw new ValidatorException("SERVER_ERROR_FROM_PLUM", e.getCause());
+            logger.error("server connection error url = {} method = {} params = {} ", url, method, headerData);
+            throw new LocalizedApplicationException(ErrorCode.SERVER_ERROR_FROM_PLUM, e.getCause());
         }
     }
 

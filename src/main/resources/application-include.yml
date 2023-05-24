@@ -48,5 +48,5 @@ basic:
 
 plum:
   organizationInn: 999999999
-  total-amount-url: https://195.158.5.89/api-monitoring/Banking/getTotalAmounts
-  total-count-url: https://195.158.5.89/api-monitoring/Banking/getTotalCount
+  total-amount-url: https://edo.uzcardtrade.uz/api-monitoring/Banking/getTotalAmounts
+  total-count-url: https://edo.uzcardtrade.uz/api-monitoring/Banking/getTotalCount

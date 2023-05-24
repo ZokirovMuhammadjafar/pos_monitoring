@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @OpenAPIDefinition
 public class PosMonitoringApplication {
-
+public static String schedule;
 	public static void main(String[] args) {
 		SpringApplication.run(PosMonitoringApplication.class, args);
 	}
