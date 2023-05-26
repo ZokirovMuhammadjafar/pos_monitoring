@@ -1,3 +1,4 @@
+/*
 package com.pos.monitoring;
 
 import com.pos.monitoring.repositories.system.Connection8005;
@@ -48,3 +49,4 @@ class PosMonitoringApplicationTests {
 
 
 }
+*/

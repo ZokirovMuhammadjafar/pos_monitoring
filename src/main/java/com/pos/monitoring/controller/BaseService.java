@@ -7,10 +7,7 @@ import com.pos.monitoring.utils.JWTUtil;
 import jakarta.validation.constraints.NotNull;
 import jakarta.xml.bind.ValidationException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -19,18 +16,18 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BaseService {
     private final JWTUtil util;
-    private static String PASSWORD="banking";
-    private static String USERNAME="technology";
+    private static String PASSWORD = "banking";
+    private static String USERNAME = "technology";
 
     @PostMapping(value = "/login")
     public SingleResponse login(@RequestBody LoginDto user) {
-        if(user.password.equals(PASSWORD)&&user.username.equals(USERNAME)){
-            return new SingleResponse(200, Map.of("token",accessToken(user.password(),-1L)));
-        }else {
+        if (user.password.equals(PASSWORD) && user.username.equals(USERNAME)) {
+            return new SingleResponse(200, Map.of("token", accessToken(user.password(), -1L)));
+        } else {
             throw new ValidatorException("AUTHENTICATION_FAILED");
         }
-
     }
+
     private String accessToken(String username, Long id) {
         String access = JWT
                 .create()
@@ -43,5 +40,6 @@ public class BaseService {
         return access;
     }
 
-    record LoginDto(@NotNull String username, @NotNull String password){};
+    record LoginDto(@NotNull String username, @NotNull String password) {
+    }
 }

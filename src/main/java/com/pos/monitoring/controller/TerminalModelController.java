@@ -22,6 +22,13 @@ public class TerminalModelController {
     private final TerminalModelService terminalModelService;
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
+    @PostMapping(value = "/get-all", produces = "application/json")
+    public ListResponse getAll(@RequestBody TerminalModelPageableSearch pageableSearch) {
+        Page<TerminalModel> pageable = terminalModelService.getAll(pageableSearch);
+        return ListResponse.of(pageable, TerminalModel.class);
+    }
+
+    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     @GetMapping("/{id}")
     public SingleResponse getById(@PathVariable String id) {
         return SingleResponse.of(terminalModelService.getById(Long.parseLong(id)));
@@ -31,7 +38,6 @@ public class TerminalModelController {
     @GetMapping("/prefix/{prefix}")
     public SingleResponse getByPrefix(@PathVariable String prefix) {
         return SingleResponse.of(terminalModelService.get(prefix));
-
     }
 
     @Transactional
@@ -46,14 +52,6 @@ public class TerminalModelController {
     public SingleResponse update(@RequestBody TerminalModelUpdateDto updateDto) {
         terminalModelService.update(updateDto);
         return SingleResponse.empty();
-    }
-
-    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    @GetMapping(value = "/get-all", produces = "application/json")
-    public ListResponse getAll(TerminalModelPageableSearch pageableSearch) {
-        Page<TerminalModel> pageable = terminalModelService.getAll(pageableSearch);
-        ListResponse of = ListResponse.of(pageable, TerminalModel.class);
-        return of;
     }
 
     @DeleteMapping("/delete")

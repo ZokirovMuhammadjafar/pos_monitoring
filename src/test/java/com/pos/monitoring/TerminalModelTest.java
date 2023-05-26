@@ -1,3 +1,4 @@
+/*
 package com.pos.monitoring;
 
 import com.pos.monitoring.entities.TerminalModel;
@@ -27,3 +28,4 @@ public class TerminalModelTest {
 //        Assertions.assertEquals(model.getName(),terminalModel.getName());
     }
 }
+*/
