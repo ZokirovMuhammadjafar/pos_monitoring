@@ -29,8 +29,8 @@ public class RestConfig {
         executor.setCorePoolSize(500);
         executor.setQueueCapacity(100);
         return new SimpleClientHttpRequestFactory() {{
-            setReadTimeout(10000);
-            setConnectTimeout(10000);
+            setReadTimeout(100000);
+            setConnectTimeout(100000);
         }};
     }
 }

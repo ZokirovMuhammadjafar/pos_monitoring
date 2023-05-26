@@ -2,6 +2,7 @@ package com.pos.monitoring.repositories;
 
 import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.entities.MachineState;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -80,7 +81,8 @@ public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
     @Query(value = "select m.state as state,count(m.state) as number from machines m where m.inst_id= ?1 group by m.state", nativeQuery = true)
     List<Map<String, Object>> getState(String instId);
 
-    List<Machine> findAllByState(MachineState state);
+    List<Machine> findAllByStateOrderByIdDeletedAsc(MachineState state, Pageable pageable);
+    int countAllByState(MachineState state);
 
     @Query("select count(m) from Machine m where m.instId = ?1 and m.state <>2")
     Long getAllTerminal(String instId);

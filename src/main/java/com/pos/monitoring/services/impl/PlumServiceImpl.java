@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -46,31 +47,33 @@ public class PlumServiceImpl implements PlumService {
 
     @Override
     public void dailySynchronizeAmount() {
-        List<Machine> machines = machineRepository.findAllByState(MachineState.HAS_CONTRACT_WITH_7003);
-        if (machines.isEmpty()) {
-            return;
-        }
+        int countAllByState = machineRepository.countAllByState(MachineState.HAS_CONTRACT_WITH_7003);
 
-        Map<String, String> headerData = new HashMap<>();
-        headerData.put(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-
-        Map<String, Object> body = convertToBody();
-
-        for (Machine machine : machines) {
-            if (ObjectUtils.isEmpty(machine.getTerminalId()) || ObjectUtils.isEmpty(machine.getMerchantId())) {
-                continue;
+        for (int i = 0; i < countAllByState; i = i + 10) {
+            List<Machine> machines = machineRepository.findAllByStateOrderByIdDeletedAsc(MachineState.HAS_CONTRACT_WITH_7003, PageRequest.of(i, 10));
+            if (machines.isEmpty()) {
+                return;
             }
+            Map<String, String> headerData = new HashMap<>();
+            headerData.put(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
-            PDailyTransactionRequestDto requestItemDto = new PDailyTransactionRequestDto(machine.getTerminalId(), machine.getMerchantId());
+            Map<String, Object> body = convertToBody();
+            for (Machine machine : machines) {
+                if (ObjectUtils.isEmpty(machine.getTerminalId()) || ObjectUtils.isEmpty(machine.getMerchantId())) {
+                    continue;
+                }
 
-            body.put("terminals", List.of(requestItemDto));
-            ResponseEntity<PDailyTransactionResponseDto> responseEntity = restTemplates.executeWithBasic(TOTAL_AMOUNT_URL, HttpMethod.POST, headerData, body, PDailyTransactionResponseDto.class);
-            PDailyTransactionResponseDto responseDto = responseEntity.getBody();
+                PDailyTransactionRequestDto requestItemDto = new PDailyTransactionRequestDto(machine.getTerminalId(), machine.getMerchantId());
 
-            if (!ObjectUtils.isEmpty(responseDto)) {
-                List<PDailyTransactionDto> amounts = responseDto.getData().getAmounts();
-                Transaction transaction = new Transaction("test", "test-parent", "92408348", "90488368", amounts.get(0).getTotalAmount(), TimeUtils.toYYYYmmDD(new Date()));
-                transactionRepository.save(transaction);
+                body.put("terminals", List.of(requestItemDto));
+                ResponseEntity<PDailyTransactionResponseDto> responseEntity = restTemplates.executeWithBasic(TOTAL_AMOUNT_URL, HttpMethod.POST, headerData, body, PDailyTransactionResponseDto.class);
+                PDailyTransactionResponseDto responseDto = responseEntity.getBody();
+
+                if (!ObjectUtils.isEmpty(responseDto)) {
+                    List<PDailyTransactionDto> amounts = responseDto.getData().getAmounts();
+                    Transaction transaction = new Transaction("test", "test-parent", "92408348", "90488368", amounts.get(0).getTotalAmount(), TimeUtils.toYYYYmmDD(new Date()));
+                    transactionRepository.save(transaction);
+                }
             }
         }
     }
@@ -82,27 +85,31 @@ public class PlumServiceImpl implements PlumService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.SUPPORTS)
     public void getDailyTransactionCount() {
         Map<String, String> header = getHeader();
         Map<String, Object> body = convertToBody();
 
-        List<Machine> machines = machineRepository.findAllByState(MachineState.HAS_CONTRACT_WITH_7003);
-        if (machines.isEmpty()) {
-            return;
-        }
+        int countAllByState = machineRepository.countAllByState(MachineState.HAS_CONTRACT_WITH_7003);
 
-        PDailyTransactionRequestDto requestItemDto = new PDailyTransactionRequestDto();
-
-        for (int i = 0; i < machines.size(); i++) {
-            Machine machine = machines.get(i);
-            if (!ObjectUtils.isEmpty(machine.getTerminalId()) && !ObjectUtils.isEmpty(machine.getMerchantId())) {
-                long begin=System.currentTimeMillis();
-                logger.info("sending request to plum machine sr_number = {} terminal_id={} merchant_id={} item={}", machine.getSrNumber(), machine.getTerminalId(), machine.getMerchantId(),i);
-                sendAndSaveTransaction(header, body, requestItemDto, machine);
-                logger.info("request have finished time = {}",System.currentTimeMillis()-begin);
+        for (int i = 0; i < countAllByState; i = i + 10) {
+            List<Machine> machines = machineRepository.findAllByStateOrderByIdDeletedAsc(MachineState.HAS_CONTRACT_WITH_7003, PageRequest.of(i, 10));
+            if (machines.isEmpty()) {
+                return;
+            }
+            PDailyTransactionRequestDto requestItemDto = new PDailyTransactionRequestDto();
+            for (int j = 0; j < machines.size(); j++) {
+                Machine machine = machines.get(j);
+                if (!ObjectUtils.isEmpty(machine.getTerminalId()) && !ObjectUtils.isEmpty(machine.getMerchantId())) {
+                    long begin = System.currentTimeMillis();
+                    logger.info("sending request to plum machine sr_number = {} terminal_id={} merchant_id={} item={}", machine.getSrNumber(), machine.getTerminalId(), machine.getMerchantId(), i);
+                    sendAndSaveTransaction(header, body, requestItemDto, machine);
+                    logger.info("request have finished time = {}", System.currentTimeMillis() - begin);
+                }
             }
         }
+
+
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
