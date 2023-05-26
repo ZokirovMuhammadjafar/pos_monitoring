@@ -5,9 +5,7 @@ import com.pos.monitoring.exceptions.ValidatorException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ReflectionUtils {
     public static <T> T mapToClass(Map<String, Object> objectMap, Class<T> clazz) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
@@ -22,16 +20,16 @@ public class ReflectionUtils {
                 if (genericType.getTypeName().equals(String.class.getName())) {
                     field.set(objects, object);
                 } else if (genericType.getTypeName().equals(Integer.class.getName())) {
-                    field.set(objects, Integer.valueOf(object+""));
+                    field.set(objects, Integer.valueOf(object + ""));
                 } else if (genericType.getTypeName().equals(Long.class.getName())) {
                     field.set(objects, Long.valueOf((String) object));
                 } else if (genericType.getTypeName().equals(LocalDateTime.class.getName())) {
                     field.set(objects, object);
                 } else if (genericType.getTypeName().equals(Boolean.class.getName())) {
                     field.set(objects, parseBoolean((String) object));
-                }else if((field.getType().isEnum())){
-                    Class<?> enums = Class.forName("com.pos.monitoring.entities."+name.toLowerCase().substring(0,1).toUpperCase()+name.substring(1));
-                    field.set(objects,Enum.valueOf((Class<? extends Enum>)enums, (String) object));
+                } else if ((field.getType().isEnum())) {
+                    Class<?> enums = Class.forName("com.pos.monitoring.entities." + name.toLowerCase().substring(0, 1).toUpperCase() + name.substring(1));
+                    field.set(objects, Enum.valueOf((Class<? extends Enum>) enums, (String) object));
                 }
             }
         }
@@ -106,6 +104,11 @@ public class ReflectionUtils {
             map.put(fieldName, String.valueOf(field.get(objects)));
         } else if (field.getType().getName().equals(Long.class.getName())) {
             map.put(fieldName, String.valueOf(field.get(objects)));
+        } else if (field.getAnnotations().length != 0) {
+            Optional<Boolean> first = Arrays.stream(field.getAnnotations()).map(annotation -> annotation.annotationType().getName().equals("com.pos.monitoring.annotation.Reflection")).findFirst();
+            if (first.isPresent() && first.get()) {
+                map.put(fieldName, field.get(objects).toString());
+            }
         } else if (field.getType().isPrimitive()) {
             switch (field.getType().getSimpleName()) {
                 case "int" -> map.put(fieldName, String.valueOf(field.getInt(objects)));

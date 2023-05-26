@@ -1,5 +1,6 @@
 package com.pos.monitoring.entities;
 
+import com.pos.monitoring.annotation.Reflection;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,6 +26,8 @@ public class MachineHistory extends AbstractEntity {
     protected String toMfo;
     @Column
     protected String fromMfo;
+
+    @Reflection
     @Enumerated(EnumType.ORDINAL)
     protected MachineHistoryState state;
 }
