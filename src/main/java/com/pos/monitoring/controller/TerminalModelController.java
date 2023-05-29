@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/terminal-models")
 @RequiredArgsConstructor
+@CrossOrigin
 public class TerminalModelController {
 
     private final TerminalModelService terminalModelService;
