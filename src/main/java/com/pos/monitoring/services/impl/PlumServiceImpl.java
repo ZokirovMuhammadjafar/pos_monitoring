@@ -50,7 +50,7 @@ public class PlumServiceImpl implements PlumService {
         int countAllByState = machineRepository.countAllByState(MachineState.HAS_CONTRACT_WITH_7003);
 
         for (int i = 0; i < countAllByState; i = i + 10) {
-            List<Machine> machines = machineRepository.findAllByStateOrderByIdDeletedAsc(MachineState.HAS_CONTRACT_WITH_7003, PageRequest.of(i, 10));
+            List<Machine> machines = machineRepository.findAllByStateOrderByIdAsc(MachineState.HAS_CONTRACT_WITH_7003, PageRequest.of(i, 10));
             if (machines.isEmpty()) {
                 return;
             }
@@ -92,8 +92,9 @@ public class PlumServiceImpl implements PlumService {
 
         int countAllByState = machineRepository.countAllByState(MachineState.HAS_CONTRACT_WITH_7003);
 
-        for (int i = 0; i < countAllByState; i = i + 10) {
-            List<Machine> machines = machineRepository.findAllByStateOrderByIdDeletedAsc(MachineState.HAS_CONTRACT_WITH_7003, PageRequest.of(i, 10));
+
+        for (int i = 0; i < countAllByState/10;i++ ){
+            List<Machine> machines = machineRepository.findAllByStateOrderByIdAsc(MachineState.HAS_CONTRACT_WITH_7003, PageRequest.of(i, 10));
             if (machines.isEmpty()) {
                 return;
             }

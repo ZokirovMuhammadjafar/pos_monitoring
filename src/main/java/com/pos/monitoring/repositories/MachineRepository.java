@@ -81,13 +81,8 @@ public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
     @Query(value = "select m.state as state,count(m.state) as number from machines m where m.inst_id= ?1 group by m.state", nativeQuery = true)
     List<Map<String, Object>> getState(String instId);
 
-    List<Machine> findAllByStateOrderByIdDeletedAsc(MachineState state, Pageable pageable);
+    List<Machine> findAllByStateOrderByIdAsc(MachineState state, Pageable pageable);
     int countAllByState(MachineState state);
-
-    @Query("select count(m) from Machine m where m.instId = ?1 and m.state <>2")
-    Long getAllTerminal(String instId);
-    @Query("select count(m) from Machine m where m.instId = ?1 and m.isContract")
-    Long getAllTerminalHasContract(String instId);
     @Query("select count(m) from Machine m where m.instId = ?1 and (m.state=0 or m.state=3)")
     Long getAllWorkingTerminal(String instId);
 }
