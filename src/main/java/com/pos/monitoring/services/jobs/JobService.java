@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-@Profile(value = "prod")
+@Profile(value = "local")
 @Service
 @RequiredArgsConstructor
 public class JobService {
@@ -17,15 +17,15 @@ public class JobService {
     private final MachineService machineService;
     private final PlumService plumService;
 
-    //    @Scheduled(cron = "0 * * * * *")
+    //        @Scheduled(cron = "0 * * * * *")
     public void synchronizeBranch() {
         System.out.println("------------ Branches start synchronization------------");
         branchService.synchronize();
         System.out.println("------------ Branches end synchronization------------");
     }
 
-//        @Scheduled(fixedDelay = 10000)
-    @Scheduled(cron = "0 41 9 * * *")
+//            @Scheduled(fixedDelay = 10000)
+    @Scheduled(cron = "0 0 2 * * *")
     public void synchronizeDailyTransactionCount() {
         System.out.println("------------ Transaction count start synchronization------------");
 
@@ -34,7 +34,7 @@ public class JobService {
         System.out.println("------------ Transaction count end synchronization------------");
     }
 
-    @Scheduled(cron = "0 30 17 * * *")
+    @Scheduled(cron = "0 0 18 * * *")
     public void synchronizeMachine() throws InterruptedException {
         System.out.println("------------ Machines start synchronization------------");
         for (int i = 0; i < 600_000; i = i + 100) {

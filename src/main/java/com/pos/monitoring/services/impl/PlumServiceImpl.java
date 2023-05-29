@@ -92,25 +92,22 @@ public class PlumServiceImpl implements PlumService {
 
         int countAllByState = machineRepository.countAllByState(MachineState.HAS_CONTRACT_WITH_7003);
 
-
-        for (int i = 0; i < countAllByState/10;i++ ){
-            List<Machine> machines = machineRepository.findAllByStateOrderByIdAsc(MachineState.HAS_CONTRACT_WITH_7003, PageRequest.of(i, 10));
+        int cycles = Math.round((float) countAllByState / 10);
+        for (int cycle = 0; cycle < cycles; cycle++) {
+            List<Machine> machines = machineRepository.findAllByStateOrderByIdAsc(MachineState.HAS_CONTRACT_WITH_7003, PageRequest.of(cycle, 10));
             if (machines.isEmpty()) {
                 return;
             }
             PDailyTransactionRequestDto requestItemDto = new PDailyTransactionRequestDto();
-            for (int j = 0; j < machines.size(); j++) {
-                Machine machine = machines.get(j);
+            for (Machine machine : machines) {
                 if (!ObjectUtils.isEmpty(machine.getTerminalId()) && !ObjectUtils.isEmpty(machine.getMerchantId())) {
                     long begin = System.currentTimeMillis();
-                    logger.info("sending request to plum machine sr_number = {} terminal_id={} merchant_id={} item={}", machine.getSrNumber(), machine.getTerminalId(), machine.getMerchantId(), i);
+                    logger.info("sending request to plum machine sr_number = {} terminal_id={} merchant_id={} item={}", machine.getSrNumber(), machine.getTerminalId(), machine.getMerchantId(), cycle);
                     sendAndSaveTransaction(header, body, requestItemDto, machine);
                     logger.info("request have finished time = {}", System.currentTimeMillis() - begin);
                 }
             }
         }
-
-
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

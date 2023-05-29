@@ -104,11 +104,8 @@ public class ReflectionUtils {
             map.put(fieldName, String.valueOf(field.get(objects)));
         } else if (field.getType().getName().equals(Long.class.getName())) {
             map.put(fieldName, String.valueOf(field.get(objects)));
-        } else if (field.getAnnotations().length != 0) {
-            Optional<Boolean> first = Arrays.stream(field.getAnnotations()).map(annotation -> annotation.annotationType().getName().equals("com.pos.monitoring.annotation.Reflection")).findFirst();
-            if (first.isPresent() && first.get()) {
-                map.put(fieldName, field.get(objects).toString());
-            }
+        } else if (field.getType().isEnum()) {
+            map.put(fieldName, field.get(objects).toString());
         } else if (field.getType().isPrimitive()) {
             switch (field.getType().getSimpleName()) {
                 case "int" -> map.put(fieldName, String.valueOf(field.getInt(objects)));
