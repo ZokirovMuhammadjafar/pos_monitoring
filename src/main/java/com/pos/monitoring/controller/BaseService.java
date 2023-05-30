@@ -14,6 +14,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@CrossOrigin
 public class BaseService {
     private final JWTUtil util;
     private static String PASSWORD = "banking";
