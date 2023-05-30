@@ -5,9 +5,11 @@ import com.pos.monitoring.dtos.response.plum.PDailyTransactionDto;
 import com.pos.monitoring.dtos.response.plum.PDailyTransactionResponseDto;
 import com.pos.monitoring.dtos.response.plum.PlumDailyTransactionCountDto;
 import com.pos.monitoring.dtos.response.plum.PlumDailyTransactionCountsDto;
+import com.pos.monitoring.entities.DailySynchronize;
 import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.entities.MachineState;
 import com.pos.monitoring.entities.Transaction;
+import com.pos.monitoring.repositories.DailySynchronizeRepository;
 import com.pos.monitoring.repositories.MachineRepository;
 import com.pos.monitoring.repositories.TransactionRepository;
 import com.pos.monitoring.services.PlumService;
@@ -37,13 +39,14 @@ public class PlumServiceImpl implements PlumService {
     private final RestTemplates restTemplates;
     private final MachineRepository machineRepository;
     private final TransactionRepository transactionRepository;
+    private final DailySynchronizeRepository dailySynchronizeRepository;
     @Value("${plum.total-amount-url}")
     public String TOTAL_AMOUNT_URL;
     @Value("${plum.total-count-url}")
     public String TOTAL_COUNT_URL;
     @Value("${plum.organizationInn}")
     public String ORGANIZATION_INN;
-    Logger logger = LogManager.getLogger(PlumServiceImpl.class);
+    private static final Logger logger = LogManager.getLogger(PlumServiceImpl.class);
 
     @Override
     public void dailySynchronizeAmount() {
@@ -90,10 +93,23 @@ public class PlumServiceImpl implements PlumService {
         Map<String, String> header = getHeader();
         Map<String, Object> body = convertToBody();
 
+        DailySynchronize dailySynchronize;
+        Date today = new Date();
+        Optional<DailySynchronize> dailySynchronizeOptional = dailySynchronizeRepository.findByToday(TimeUtils.toYYYYmmDD(today));
         int countAllByState = machineRepository.countAllByState(MachineState.HAS_CONTRACT_WITH_7003);
-
         int cycles = Math.round((float) countAllByState / 10);
-        for (int cycle = 0; cycle < cycles; cycle++) {
+
+        if (dailySynchronizeOptional.isEmpty()) {
+            dailySynchronize = new DailySynchronize(TimeUtils.toYYYYmmDD(today), countAllByState, cycles, 0);
+            dailySynchronizeRepository.save(dailySynchronize);
+        } else {
+            dailySynchronize = dailySynchronizeOptional.get();
+            if (dailySynchronize.getCycle() == dailySynchronize.getCycles()) {
+                return;
+            }
+        }
+
+        for (int cycle = dailySynchronize.getCycle(); cycle < dailySynchronize.getCycles(); cycle++) {
             List<Machine> machines = machineRepository.findAllByStateOrderByIdAsc(MachineState.HAS_CONTRACT_WITH_7003, PageRequest.of(cycle, 10));
             if (machines.isEmpty()) {
                 return;
@@ -103,15 +119,26 @@ public class PlumServiceImpl implements PlumService {
                 if (!ObjectUtils.isEmpty(machine.getTerminalId()) && !ObjectUtils.isEmpty(machine.getMerchantId())) {
                     long begin = System.currentTimeMillis();
                     logger.info("sending request to plum machine sr_number = {} terminal_id={} merchant_id={} item={}", machine.getSrNumber(), machine.getTerminalId(), machine.getMerchantId(), cycle);
-                    sendAndSaveTransaction(header, body, requestItemDto, machine);
+
+                    try {
+                        sendAndSaveTransaction(header, body, requestItemDto, machine, today);
+                    } catch (Exception e) {
+                        dailySynchronize.setCycles(cycles);
+                        dailySynchronize.setCycle(cycle);
+                        dailySynchronizeRepository.save(dailySynchronize);
+                        logger.info(e.getMessage());
+                    }
                     logger.info("request have finished time = {}", System.currentTimeMillis() - begin);
                 }
             }
         }
+        dailySynchronize.setCycles(cycles);
+        dailySynchronize.setCycle(cycles);
+        dailySynchronizeRepository.save(dailySynchronize);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void sendAndSaveTransaction(Map<String, String> header, Map<String, Object> body, PDailyTransactionRequestDto requestItemDto, Machine machine) {
+    public void sendAndSaveTransaction(Map<String, String> header, Map<String, Object> body, PDailyTransactionRequestDto requestItemDto, Machine machine, Date today) {
         requestItemDto.setMerchantId(machine.getMerchantId());
         requestItemDto.setTerminalId(machine.getTerminalId());
         body.put("terminals", List.of(requestItemDto));
@@ -121,7 +148,7 @@ public class PlumServiceImpl implements PlumService {
             PlumDailyTransactionCountDto data = responseBody.getData();
             Integer totalCount = data.getTotalCount();
             machine.setTransactionCount(totalCount);
-            machine.setTransactionDate(new Date());
+            machine.setTransactionDate(today);
             machineRepository.saveAndFlush(machine);
         }
     }
