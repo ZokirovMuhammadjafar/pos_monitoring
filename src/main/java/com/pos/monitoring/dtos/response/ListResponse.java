@@ -19,9 +19,28 @@ public final class ListResponse extends Response {
     private ListResponse(List data, int total) {
         this.data = data;
         this.total = total;
+        success=true;
+        code=200;
     }
 
     public ListResponse() {
+    }
+    public static<T> ListResponse of(List<T> page, Class clazz,int total) {
+
+        ListResponse listResponse = new ListResponse();
+        listResponse.total = total;
+        List collect = page.stream().map(a -> {
+            HashMap<String, String> apply = new HashMap<>();
+            loopObjectFields(clazz, a, apply);
+            Class loop = clazz;
+            while (!loop.getSuperclass().equals(Object.class)) {
+                loop = loop.getSuperclass();
+                loopObjectFields(loop, a, apply);
+            }
+            return apply;
+        }).toList();
+        listResponse.data = collect;
+        return listResponse;
     }
 
     public static ListResponse of(Page page, Class clazz) {

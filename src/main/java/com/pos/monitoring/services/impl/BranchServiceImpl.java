@@ -29,4 +29,11 @@ public class BranchServiceImpl implements BranchService {
         }
         return branchRepository.findByParentAndDeletedFalse(parentBranch);
     }
+
+    @Override
+    public List<Branch> getAllInstID() {
+       return branchRepository.findIntsId();
+    }
+
+
 }

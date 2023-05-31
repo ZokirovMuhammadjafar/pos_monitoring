@@ -10,4 +10,6 @@ public interface BranchService {
     void synchronize();
 
     List<Branch>getAllByInstId(@NotNull String instId);
+
+    List<Branch>getAllInstID();
 }
