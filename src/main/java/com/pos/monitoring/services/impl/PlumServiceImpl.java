@@ -90,6 +90,7 @@ public class PlumServiceImpl implements PlumService {
     @Override
     @Transactional(propagation = Propagation.SUPPORTS)
     public void getDailyTransactionCount() {
+        logger.info("------------ Transaction count start synchronization------------");
         Map<String, String> header = getHeader();
         Map<String, Object> body = convertToBody();
 
@@ -105,6 +106,7 @@ public class PlumServiceImpl implements PlumService {
         } else {
             dailySynchronize = dailySynchronizeOptional.get();
             if (dailySynchronize.getCycle() == dailySynchronize.getCycles()) {
+                logger.info("------------ Transaction count end synchronization------------");
                 return;
             }
         }
@@ -135,6 +137,7 @@ public class PlumServiceImpl implements PlumService {
         dailySynchronize.setCycles(cycles);
         dailySynchronize.setCycle(cycles);
         dailySynchronizeRepository.save(dailySynchronize);
+        logger.info("------------ Transaction count end synchronization------------");
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

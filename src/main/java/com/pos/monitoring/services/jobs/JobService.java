@@ -19,29 +19,20 @@ public class JobService {
 
     //        @Scheduled(cron = "0 * * * * *")
     public void synchronizeBranch() {
-        System.out.println("------------ Branches start synchronization------------");
         branchService.synchronize();
-        System.out.println("------------ Branches end synchronization------------");
     }
 
     //            @Scheduled(fixedDelay = 10000)
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 600000)
     public void synchronizeDailyTransactionCount() {
-        System.out.println("------------ Transaction count start synchronization------------");
-
         plumService.getDailyTransactionCount();
-
-        System.out.println("------------ Transaction count end synchronization------------");
     }
 
     @Scheduled(cron = "0 0 18 * * *")
     public void synchronizeMachine() throws InterruptedException {
-        System.out.println("------------ Machines start synchronization------------");
         for (int i = 0; i < 600_000; i = i + 100) {
             machineService.synchronize(i);
             System.out.println(i);
         }
-
-        System.out.println("------------ Machines end synchronization------------");
     }
 }
