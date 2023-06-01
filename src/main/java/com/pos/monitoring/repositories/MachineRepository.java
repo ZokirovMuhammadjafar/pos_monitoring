@@ -1,7 +1,7 @@
 package com.pos.monitoring.repositories;
 
 import com.pos.monitoring.entities.Machine;
-import com.pos.monitoring.entities.MachineState;
+import com.pos.monitoring.dtos.enums.MachineState;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

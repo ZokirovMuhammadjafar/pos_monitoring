@@ -1,6 +1,7 @@
 package com.pos.monitoring.entities;
 
 import com.pos.monitoring.annotation.Reflection;
+import com.pos.monitoring.dtos.enums.MachineHistoryState;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

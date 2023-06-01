@@ -1,4 +1,4 @@
-package com.pos.monitoring.entities;
+package com.pos.monitoring.dtos.enums;
 
 public enum MachineState {
     //    this indicates that the pos machine is currently working and we can take data from 7003 uzcard project
