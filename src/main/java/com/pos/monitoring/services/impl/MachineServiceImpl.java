@@ -1,7 +1,7 @@
 package com.pos.monitoring.services.impl;
 
-import com.pos.monitoring.dtos.enums.MachineState;
-import com.pos.monitoring.dtos.enums.Soft;
+import com.pos.monitoring.entities.enums.MachineState;
+import com.pos.monitoring.entities.enums.Soft;
 import com.pos.monitoring.dtos.pageable.MachineFilterDto;
 import com.pos.monitoring.dtos.response.ListResponse;
 import com.pos.monitoring.dtos.response.SingleResponse;

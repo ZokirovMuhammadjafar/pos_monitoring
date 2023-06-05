@@ -1,7 +1,7 @@
 package com.pos.monitoring.entities;
 
-import com.pos.monitoring.dtos.enums.MachineState;
-import com.pos.monitoring.dtos.enums.Soft;
+import com.pos.monitoring.entities.enums.MachineState;
+import com.pos.monitoring.entities.enums.Soft;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
