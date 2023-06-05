@@ -5,9 +5,12 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PlumDailyTransactionCountDto {
+public class PlumDailyTransactionInfoDto {
 
     private String requestId;
 
     private Integer totalCount;
+    private Double totalDebit;
+
+    private Double totalCredit;
 }

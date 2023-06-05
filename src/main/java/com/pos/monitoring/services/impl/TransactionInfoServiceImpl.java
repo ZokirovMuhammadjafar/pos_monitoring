@@ -1,12 +1,11 @@
 package com.pos.monitoring.services.impl;
 
-import com.pos.monitoring.dtos.pageable.TransactionPageableSearch;
-import com.pos.monitoring.entities.TerminalModel;
-import com.pos.monitoring.entities.Transaction;
+import com.pos.monitoring.dtos.pageable.TransactionInfoPageableSearch;
+import com.pos.monitoring.entities.TransactionInfo;
 import com.pos.monitoring.exceptions.ErrorCode;
 import com.pos.monitoring.exceptions.LocalizedApplicationException;
-import com.pos.monitoring.repositories.TransactionRepository;
-import com.pos.monitoring.services.TransactionService;
+import com.pos.monitoring.repositories.TransactionInfoRepository;
+import com.pos.monitoring.services.TransactionInfoService;
 import com.pos.monitoring.utils.DaoUtils;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +19,13 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class TransactionServiceImpl implements TransactionService {
+public class TransactionInfoServiceImpl implements TransactionInfoService {
 
-    private final TransactionRepository transactionRepository;
+    private final TransactionInfoRepository transactionInfoRepository;
 
     @Override
-    public Page<Transaction> getAll(TransactionPageableSearch pageableSearch) {
-        return transactionRepository.findAll((Specification<Transaction>) (root, query, cb) -> {
+    public Page<TransactionInfo> getAll(TransactionInfoPageableSearch pageableSearch) {
+        return transactionInfoRepository.findAll((Specification<TransactionInfo>) (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             if (!ObjectUtils.isEmpty(pageableSearch.getMfo())) {
@@ -43,7 +42,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Transaction get(Long id) {
-        return transactionRepository.findById(id).orElseThrow(() -> new LocalizedApplicationException(ErrorCode.ENTITY_NOT_FOUND));
+    public TransactionInfo get(Long id) {
+        return transactionInfoRepository.findById(id).orElseThrow(() -> new LocalizedApplicationException(ErrorCode.ENTITY_NOT_FOUND));
     }
 }

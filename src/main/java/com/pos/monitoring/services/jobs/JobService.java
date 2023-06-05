@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-@Profile(value = "prod")
+@Profile(value = "dev")
 @Service
 @RequiredArgsConstructor
 public class JobService {
@@ -25,7 +25,7 @@ public class JobService {
     //            @Scheduled(fixedDelay = 10000)
     @Scheduled(fixedRate = 600000)
     public void synchronizeDailyTransactionCount() {
-        plumService.getDailyTransactionCount();
+        plumService.getDailyTransactionInfo();
     }
 
     @Scheduled(cron = "0 0 18 * * *")

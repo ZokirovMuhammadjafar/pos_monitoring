@@ -41,6 +41,7 @@ public class Machine extends AbstractEntity {
     protected Integer fixedCount;
     protected Integer authCount;
     protected Integer transactionCount;
+    protected Double transactionDebit;
     @Temporal(value = TemporalType.DATE)
     protected Date transactionDate;
 

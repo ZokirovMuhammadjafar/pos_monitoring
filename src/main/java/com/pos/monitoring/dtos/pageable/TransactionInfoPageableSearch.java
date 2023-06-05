@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TransactionPageableSearch extends PageableSearch {
+public class TransactionInfoPageableSearch extends PageableSearch {
 
     private String mfo;
     private String parentMfo;
