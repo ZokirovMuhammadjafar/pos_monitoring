@@ -7,7 +7,7 @@ import com.pos.monitoring.dtos.response.plum.PlumDailyTransactionCountDto;
 import com.pos.monitoring.dtos.response.plum.PlumDailyTransactionCountsDto;
 import com.pos.monitoring.entities.DailySynchronize;
 import com.pos.monitoring.entities.Machine;
-import com.pos.monitoring.entities.MachineState;
+import com.pos.monitoring.entities.enums.MachineState;
 import com.pos.monitoring.entities.Transaction;
 import com.pos.monitoring.repositories.DailySynchronizeRepository;
 import com.pos.monitoring.repositories.MachineRepository;

@@ -3,8 +3,15 @@ package com.pos.monitoring.services.impl;
 import com.pos.monitoring.dtos.pageable.MachineFilterDto;
 import com.pos.monitoring.dtos.response.ListResponse;
 import com.pos.monitoring.dtos.response.SingleResponse;
-import com.pos.monitoring.entities.*;
+import com.pos.monitoring.entities.Branch;
+import com.pos.monitoring.entities.DailyTerminalInfo;
+import com.pos.monitoring.entities.Machine;
+import com.pos.monitoring.entities.TerminalModel;
+import com.pos.monitoring.entities.enums.DailyStatus;
+import com.pos.monitoring.entities.enums.MachineState;
+import com.pos.monitoring.entities.enums.Soft;
 import com.pos.monitoring.repositories.BranchRepository;
+import com.pos.monitoring.repositories.DailyTerminalInfoRepository;
 import com.pos.monitoring.repositories.MachineRepository;
 import com.pos.monitoring.repositories.TerminalModelRepository;
 import com.pos.monitoring.repositories.system.Connection8005;
@@ -33,6 +40,7 @@ public class MachineServiceImpl implements MachineService {
     private final BranchRepository branchRepository;
     private final MachineHistoryService machineHistoryService;
     private final TerminalModelRepository terminalModelRepository;
+    private final DailyTerminalInfoRepository dailyTerminalInfoRepository;
     Logger logger = LogManager.getLogger(MachineServiceImpl.class);
 
     private synchronized static void create(Machine machine, TerminalModel validPrefix) {
@@ -69,8 +77,8 @@ public class MachineServiceImpl implements MachineService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void synchronize(int i) {
-        List<Machine> allChangeMachines = connection8005.getAllMachinesFirst(i);
+    public void synchronizeDailyChanges(int i) {
+        List<Machine> allChangeMachines = connection8005.getAllMachinesChange(i);
         for (Machine machine : allChangeMachines) {
             String branchMfo = machine.getBranchMfo();
             if (branchMfo != null) {
@@ -87,6 +95,30 @@ public class MachineServiceImpl implements MachineService {
             }
             machine.setPrefix(machine.getSrNumber().substring(0, 3));
             stateChoose(machine);
+        }
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void synchronizeFix() {
+        List<DailyTerminalInfo> dailyTerminalInfoFix = connection8005.getDailyTerminalInfoFix();
+        for (DailyTerminalInfo terminalInfoFix : dailyTerminalInfoFix) {
+            Machine machina = machineRepository.findBySrNumberAndDeleted(terminalInfoFix.getSrNumber(), false);
+            terminalInfoFix.setMachine(machina);
+            terminalInfoFix.setStatus(DailyStatus.FIXED);
+            dailyTerminalInfoRepository.save(terminalInfoFix);
+        }
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void synchronizeAuthCode() {
+        List<DailyTerminalInfo> dailyTerminalInfoAuthCode = connection8005.getDailyTerminalInfoAuthCode();
+        for (DailyTerminalInfo terminalInfoAuthCode : dailyTerminalInfoAuthCode) {
+            Machine machina = machineRepository.findBySrNumberAndDeleted(terminalInfoAuthCode.getSrNumber(), false);
+            terminalInfoAuthCode.setMachine(machina);
+            terminalInfoAuthCode.setStatus(DailyStatus.AUTH_CODE);
+            dailyTerminalInfoRepository.save(terminalInfoAuthCode);
         }
     }
 
@@ -129,11 +161,11 @@ public class MachineServiceImpl implements MachineService {
         int total = instId.size();
         return ListResponse.of
                 (
-                         instId
-                        .stream()
-                        .skip(filterDto.getPageNumber())
-                        .limit(filterDto.getPageSize())
-                        .collect(Collectors.toList()), total
+                        instId
+                                .stream()
+                                .skip(filterDto.getPageNumber())
+                                .limit(filterDto.getPageSize())
+                                .collect(Collectors.toList()), total
                 );
     }
 
@@ -160,7 +192,6 @@ public class MachineServiceImpl implements MachineService {
     }
 
     private void stateChoose(Machine machine) {
-
         TerminalModel validPrefix = terminalModelRepository.findByPrefixAndDeleted(machine.getPrefix(), false);
         Machine oldMachine = machineRepository.findBySrNumberAndDeleted(machine.getSrNumber(), false);
         if (validPrefix == null) {
@@ -242,5 +273,4 @@ public class MachineServiceImpl implements MachineService {
             machineRepository.saveAndFlush(oldMachine);
         }
     }
-
 }

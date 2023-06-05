@@ -1,10 +1,12 @@
 package com.pos.monitoring.entities;
 
+import com.pos.monitoring.entities.enums.MachineState;
+import com.pos.monitoring.entities.enums.Soft;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
+import lombok.ToString;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -17,6 +19,7 @@ import java.util.Date;
 @DynamicUpdate
 @NoArgsConstructor
 @Table(name = "machines")
+@ToString
 public class Machine extends AbstractEntity {
     @Column
     protected String srNumber;
@@ -24,7 +27,6 @@ public class Machine extends AbstractEntity {
     protected String instId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "branch_id")
-    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     protected Branch branch;
     @Column
     protected String branchMfo;
@@ -36,19 +38,11 @@ public class Machine extends AbstractEntity {
     protected Soft soft;
     protected String model;
     protected String prefix;
-    protected Integer fixedCount;
-    protected Integer authCount;
     protected Integer transactionCount;
     @Temporal(value = TemporalType.DATE)
     protected Date transactionDate;
-
     protected Boolean isContract = false;
-
     @Enumerated(value = EnumType.ORDINAL)
     protected MachineState state = MachineState.HAS_ERROR;
 
-    @Override
-    public String toString() {
-        return "Machine{" + "srNumber='" + srNumber + '\'' + ", instId='" + instId + '\'' + ", branchMfo='" + branchMfo + '\'' + ", merchantId='" + merchantId + '\'' + ", terminalId='" + terminalId + '\'' + ", prefix='" + prefix + '\'' + ", isContract=" + isContract + ", state=" + state + '}';
-    }
 }

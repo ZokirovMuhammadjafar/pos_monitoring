@@ -1,10 +1,9 @@
 package com.pos.monitoring.services.impl;
 
 import com.pos.monitoring.dtos.pageable.MachineHistoryPageableSearch;
-import com.pos.monitoring.entities.MachineHistoryState;
+import com.pos.monitoring.entities.enums.MachineHistoryState;
 import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.entities.MachineHistory;
-import com.pos.monitoring.entities.TerminalModel;
 import com.pos.monitoring.exceptions.ErrorCode;
 import com.pos.monitoring.exceptions.LocalizedApplicationException;
 import com.pos.monitoring.repositories.MachineHistoryRepository;
@@ -15,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +47,6 @@ public class MachineHistoryServiceImpl implements MachineHistoryService {
     public Page<MachineHistory> getAll(MachineHistoryPageableSearch pageableSearch) {
         return machineHistoryRepository.findAll((Specification<MachineHistory>) (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-
             predicates.add(cb.equal(root.get("deleted"), Boolean.FALSE));
             return cb.and(predicates.toArray(new Predicate[0]));
         }, DaoUtils.toPaging(pageableSearch));

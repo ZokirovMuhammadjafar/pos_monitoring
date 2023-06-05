@@ -13,11 +13,12 @@ class BranchServiceImplTest {
     BranchService branchService;
     @Autowired
     BranchController branchController;
+    @Autowired
+    MachineServiceImpl machineService;
 
     @Test
     public void bank(){
-
-        branchController.getAllInstId();
+//        machineService.synchronizeAuthCode();
     }
 
 }

@@ -1,4 +1,4 @@
-package com.pos.monitoring.entities;
+package com.pos.monitoring.entities.enums;
 
 public enum Soft {
     ASHBURN,

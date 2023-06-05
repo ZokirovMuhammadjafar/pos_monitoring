@@ -6,17 +6,15 @@ import com.pos.monitoring.dtos.pageable.MachineFilterDto;
 import com.pos.monitoring.entities.TerminalModel;
 
 public interface MachineService {
-    /**
-     * this method use synchronize the machines from 8005
-     * update comes every day
-     */
-    void synchronize(int i);
+    void synchronizeDailyChanges(int i);
+
+    void synchronizeFix();
+
+    void synchronizeAuthCode();
 
     void deleteByPrefix(String prefix);
 
     void updateValid(TerminalModel terminalModel);
-
-
 
     SingleResponse getStat(String instId);
 

@@ -1,19 +1,23 @@
 package com.pos.monitoring.repositories.system;
 
-import com.pos.monitoring.repositories.system.queries.ConstantQueries;
+import com.pos.monitoring.entities.DailyTerminalInfo;
 import com.pos.monitoring.entities.Machine;
+import com.pos.monitoring.repositories.system.queries.ConstantQueries;
 import com.pos.monitoring.utils.ReflectionUtils;
 import lombok.SneakyThrows;
+import lombok.Synchronized;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.ObjectUtils;
 
 import java.sql.*;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 @Repository
-public class Connection8005 {
+public  class  Connection8005 {
 
     @Value("${8005.connection-db.url}")
     private String URL;
@@ -23,22 +27,9 @@ public class Connection8005 {
     private String PASSWORD;
     @Value("${8005.connection-db.username}")
     private String USERNAME;
-
     private Connection connection;
 
-
-    @SneakyThrows
-    public List<Machine> getAllChangeMachines() {
-        if (ObjectUtils.isEmpty(connection)) {
-            getConnection();
-        }
-        PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_ALL_CHANGE_MACHINES);
-
-        List<Map<String, Object>> list = getResultQuery(preparedStatement);
-        return ReflectionUtils.mapToClassList(list, Machine.class);
-    }
-
-    private List<Map<String, Object>> getResultQuery(PreparedStatement preparedStatement) throws SQLException {
+    private synchronized List<Map<String, Object>>  getResultQuery(PreparedStatement preparedStatement) throws SQLException {
         List<Map<String, Object>> list = new LinkedList<>();
         ResultSet resultSet;
         try {
@@ -68,19 +59,35 @@ public class Connection8005 {
     }
 
     @SneakyThrows
-    public List<Machine> getAllMachinesFirst(int a) {
+    public synchronized List<Machine> getAllMachinesChange(int a) {
         getConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_MACHINES_BY_100);
+        PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_ALL_CHANGE_MACHINES);
         preparedStatement.setInt(1, a);
         List<Map<String, Object>> list = getResultQuery(preparedStatement);
         return ReflectionUtils.mapToClassList(list, Machine.class);
     }
 
+    @SneakyThrows
+    public synchronized List<DailyTerminalInfo>getDailyTerminalInfoAuthCode(){
+        getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_DAILY_AUTH_CODE);
+        List<Map<String, Object>> list = getResultQuery(preparedStatement);
+        return ReflectionUtils.mapToClassList(list, DailyTerminalInfo.class);
+    }
 
     @SneakyThrows
-    private void getConnection() {
+    public synchronized List<DailyTerminalInfo>getDailyTerminalInfoFix(){
+        getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_DAILY_FIX);
+        List<Map<String, Object>> list = getResultQuery(preparedStatement);
+        return ReflectionUtils.mapToClassList(list, DailyTerminalInfo.class);
+    }
+
+    @SneakyThrows
+    private synchronized void getConnection() {
         DriverManagerDataSource driverManagerDataSource = new DriverManagerDataSource(URL, USERNAME, PASSWORD);
         driverManagerDataSource.setDriverClassName(DRIVER);
         connection = driverManagerDataSource.getConnection();
     }
+
 }
