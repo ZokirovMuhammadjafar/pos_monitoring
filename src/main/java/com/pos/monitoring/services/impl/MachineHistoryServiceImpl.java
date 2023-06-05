@@ -47,7 +47,6 @@ public class MachineHistoryServiceImpl implements MachineHistoryService {
     public Page<MachineHistory> getAll(MachineHistoryPageableSearch pageableSearch) {
         return machineHistoryRepository.findAll((Specification<MachineHistory>) (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-
             predicates.add(cb.equal(root.get("deleted"), Boolean.FALSE));
             return cb.and(predicates.toArray(new Predicate[0]));
         }, DaoUtils.toPaging(pageableSearch));
