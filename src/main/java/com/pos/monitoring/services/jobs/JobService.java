@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-@Profile(value = "prod")
+@Profile(value = "dev")
 @Service
 @RequiredArgsConstructor
 public class JobService {
@@ -26,12 +26,32 @@ public class JobService {
         logger.info("------------ Branches end synchronization------------");
     }
 
-    //            @Scheduled(fixedDelay = 10000)
+    /**
+     * Accept {}
+     * Run every 10 minute,
+     * This job get all transaction information from Plum Tech
+     */
     @Scheduled(fixedRate = 600000)
     public void synchronizeDailyTransactionCount() {
         logger.info("------------ Transaction count start synchronization------------");
-        logger.info("------------ Transaction count end synchronization------------");
+
         plumService.getDailyTransactionInfo();
+
+        logger.info("------------ Transaction count end synchronization------------");
+    }
+
+    /**
+     * Accept {}
+     * Run every 20 minute
+     * This job calculate transaction and count which is taken from Plum Tech
+     */
+    @Scheduled(fixedRate = 1200000)
+    public void calculateTransactionAndCount() {
+        logger.info("------------ Calculate transaction and count start calculate ------------");
+
+        plumService.calculateTransactionAndCount();
+
+        logger.info("------------ Calculate transaction and count end calculate------------");
     }
 
     @Scheduled(cron = "0 0 18 * * *")

@@ -29,4 +29,7 @@ public class DailySynchronize extends AbstractEntity {
 
     @Column(columnDefinition = "int default 0")
     private int cycle;
+
+    @Column(columnDefinition = "boolean default false")
+    private boolean isCalculate;
 }
