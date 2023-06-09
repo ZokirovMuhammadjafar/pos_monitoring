@@ -21,7 +21,7 @@ public class MachinesController {
         return all;
     }
 
-    @GetMapping("/all-by-mfos")
+    @PostMapping("/all-by-mfos")
     public SingleResponse getAllStatistics(@RequestBody StatisticDto dto) {
         SingleResponse all = machineService.getStatistic(dto);
         return all;
