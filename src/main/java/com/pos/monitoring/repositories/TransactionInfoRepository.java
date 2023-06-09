@@ -13,4 +13,9 @@ public interface TransactionInfoRepository extends SoftDeleteJpaRepository<Trans
     @Query(value = "select ti.mfo, sum(ti.amount), sum(ti.total) " +
             " from transaction_infos ti where ti.create_date >= ?1 group by ti.mfo;", nativeQuery = true)
     List<Object[]> getAllByTransactionDate(Date date);
+
+    int countAllByTodayAndMfoIn(String today, List<String> mfos);
+
+    @Query(value = "select sum(total) from transaction_infos where today = ?1 and mfo in (?2)", nativeQuery = true)
+    int sumAllByTodayAndMfoIn(String today, List<String> mfos);
 }

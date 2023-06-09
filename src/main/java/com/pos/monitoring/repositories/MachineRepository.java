@@ -25,8 +25,8 @@ public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
     Stream<Machine> findPrefix(String prefix);
 
 
-    @Query(value = "select m.state as state,count(m.state) as number from machines m where m.inst_id= ?1 group by m.state",nativeQuery = true)
-    List<Map<String,Object>> getStat(String instId);
+    @Query(value = "select m.state as state,count(m.state) as number from machines m where m.inst_id= ?1 group by m.state", nativeQuery = true)
+    List<Map<String, Object>> getStat(String instId);
 
     @Query(value = """
             with soft_data as (select mfo                           as mfo,
@@ -75,14 +75,19 @@ public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
                      inner join fix_count f on f.branch_mfo = sd.mfo
                      inner join counts c on c.branch_mfo = sd.mfo
             group by sd.mfo;
-             """,nativeQuery = true)
-    List<Map<String,String>> getByInstId(String instId);
+             """, nativeQuery = true)
+    List<Map<String, String>> getByInstId(String instId);
 
-    @Query(value = "select m.state as state,count(m.state) as number from machines m where m.inst_id= ?1 group by m.state", nativeQuery = true)
+    @Query(value = "select m.state as state, count(m.state) as number from machines m where m.inst_id= ?1 group by m.state", nativeQuery = true)
     List<Map<String, Object>> getState(String instId);
 
+    @Query(value = "select m.state as state, count(m.state) as number from machines m where m.branchMfo in (?1) group by m.state", nativeQuery = true)
+    List<Map<String, Object>> getStatisticByMfos(List<String> mfos);
+
     List<Machine> findAllByStateOrderByIdAsc(MachineState state, Pageable pageable);
+
     int countAllByState(MachineState state);
+
     @Query("select count(m) from Machine m where m.instId = ?1 and (m.state=0 or m.state=3)")
     Long getAllWorkingTerminal(String instId);
 }

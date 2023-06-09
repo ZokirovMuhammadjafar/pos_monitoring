@@ -1,5 +1,6 @@
 package com.pos.monitoring.services.impl;
 
+import com.pos.monitoring.dtos.request.StatisticDto;
 import com.pos.monitoring.entities.enums.MachineState;
 import com.pos.monitoring.entities.enums.Soft;
 import com.pos.monitoring.dtos.pageable.MachineFilterDto;
@@ -12,13 +13,11 @@ import com.pos.monitoring.entities.TerminalModel;
 import com.pos.monitoring.entities.enums.DailyStatus;
 import com.pos.monitoring.entities.enums.MachineState;
 import com.pos.monitoring.entities.enums.Soft;
-import com.pos.monitoring.repositories.BranchRepository;
-import com.pos.monitoring.repositories.DailyTerminalInfoRepository;
-import com.pos.monitoring.repositories.MachineRepository;
-import com.pos.monitoring.repositories.TerminalModelRepository;
+import com.pos.monitoring.repositories.*;
 import com.pos.monitoring.repositories.system.Connection8005;
 import com.pos.monitoring.services.MachineHistoryService;
 import com.pos.monitoring.services.MachineService;
+import com.pos.monitoring.utils.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,6 +42,7 @@ public class MachineServiceImpl implements MachineService {
     private final MachineHistoryService machineHistoryService;
     private final TerminalModelRepository terminalModelRepository;
     private final DailyTerminalInfoRepository dailyTerminalInfoRepository;
+    private final TransactionInfoRepository transactionInfoRepository;
     Logger logger = LogManager.getLogger(MachineServiceImpl.class);
 
     private synchronized static void create(Machine machine, TerminalModel validPrefix) {
@@ -154,6 +154,28 @@ public class MachineServiceImpl implements MachineService {
             Long number = (Long) objectMap.get("number");
             convert(map, MachineState.values()[state], number);
         }
+        return SingleResponse.of(map);
+    }
+
+    @Override
+    public SingleResponse getStatistic(StatisticDto dto) {
+        List<Map<String, Object>> statisticByMfos = machineRepository.getStatisticByMfos(dto.getMfos());
+        String today = TimeUtils.toYYYYmmDD(new Date());
+        int workingCount = transactionInfoRepository.countAllByTodayAndMfoIn(today, dto.getMfos());
+        int transactionCount = transactionInfoRepository.sumAllByTodayAndMfoIn(today, dto.getMfos());
+        Map<String, Long> map = new HashMap<>();
+        map.put("allTerminal", 0L);
+        map.put("notWorking", 0L);
+        map.put("working", 0L);
+        map.put("hasContractTerminal", 0L);
+        for (Map<String, Object> objectMap : statisticByMfos) {
+            Short state = (Short) objectMap.get("state");
+            Long number = (Long) objectMap.get("number");
+            convert(map, MachineState.values()[state], number);
+        }
+        map.put("onCount", (long) workingCount);
+        map.put("offCount", (map.get("working") - workingCount));
+        map.put("transaction", (long) transactionCount);
         return SingleResponse.of(map);
     }
 
