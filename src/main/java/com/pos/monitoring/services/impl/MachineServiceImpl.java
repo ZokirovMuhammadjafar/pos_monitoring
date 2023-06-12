@@ -140,22 +140,6 @@ public class MachineServiceImpl implements MachineService {
     }
 
     @Override
-    public SingleResponse getStat(String instId) {
-        List<Map<String, Object>> stateMap = machineRepository.getState(instId);
-        Map<String, Long> map = new HashMap<>();
-        map.put("allTerminal", 0L);
-        map.put("notWorking", 0L);
-        map.put("working", 0L);
-        map.put("hasContractTerminal", 0L);
-        for (Map<String, Object> objectMap : stateMap) {
-            Short state = (Short) objectMap.get("state");
-            Long number = (Long) objectMap.get("number");
-            convert(map, MachineState.values()[state], number);
-        }
-        return SingleResponse.of(map);
-    }
-
-    @Override
     public SingleResponse getStatistic(StatisticDto dto) {
         List<Map<String, Object>> statisticByMfos = machineRepository.getStatisticByMfos(dto.getMfos());
         String today = TimeUtils.toYYYYmmDD(new Date());
@@ -179,11 +163,11 @@ public class MachineServiceImpl implements MachineService {
 
     @Override
     public ListResponse getInformationByInstId(MachineFilterDto filterDto) {
-        List<Map<String, String>> instId=null;
-        if(filterDto.getInstId()!=null){
-            instId=machineRepository.getByInstId(filterDto.getInstId());
-        }else if(filterDto.getMfos()!=null&&!filterDto.getMfos().isEmpty()) {
-            instId=machineRepository.getbyMfoList(filterDto.getMfos());
+        List<Map<String, String>> instId = null;
+        if (filterDto.getInstId() != null) {
+            instId = machineRepository.getByInstId(filterDto.getInstId());
+        } else if (filterDto.getMfos() != null && !filterDto.getMfos().isEmpty()) {
+            instId = machineRepository.getbyMfoList(filterDto.getMfos());
         }
         int total = instId.size();
         return ListResponse.of

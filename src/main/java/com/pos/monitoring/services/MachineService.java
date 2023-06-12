@@ -17,8 +17,6 @@ public interface MachineService {
 
     void updateValid(TerminalModel terminalModel);
 
-    SingleResponse getStat(String instId);
-
     SingleResponse getStatistic(StatisticDto dto);
 
     ListResponse getInformationByInstId(MachineFilterDto filterDto);
