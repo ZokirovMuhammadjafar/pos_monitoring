@@ -11,9 +11,12 @@ import java.util.stream.Stream;
 public interface BranchRepository extends SoftDeleteJpaRepository<Branch> {
 
     Branch findByMfoAndDeletedFalse(String mfo);
+    @Query("select b from Branch  b join b.parent as p where b.deleted=false and p.mfo = ?1 ")
+    List<Branch> findAllParentAndDeletedFalse(String mfo);
 
     @Query("select b from Branch b where b.mfo in (select t.instId from Machine t group by t.instId)")
     List<Branch> findIntsId();
 
-    List<Branch> findByParentAndDeletedFalse(Branch parent);
+    @Query("select  b from Branch  b where b.parent in ( ?1 )")
+    List<Branch> findByBranchesDeletedFalse(List<Branch> parent);
 }

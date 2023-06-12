@@ -1,5 +1,6 @@
 package com.pos.monitoring.controller;
 
+import com.pos.monitoring.dtos.pageable.BranchFilterDto;
 import com.pos.monitoring.dtos.response.ListResponse;
 import com.pos.monitoring.entities.Branch;
 import com.pos.monitoring.services.BranchService;
@@ -21,6 +22,12 @@ public class BranchController {
     public ListResponse getAllInstId(){
         List<Branch> allInstID = branchService.getAllInstID();
         return ListResponse.of(allInstID,Branch.class,allInstID.size());
+    }
+
+    @GetMapping("/get-all-mfos")
+    public ListResponse getAllBranchByInstIdAndFilter(BranchFilterDto branchFilterDto){
+        List<Branch> branchesByFilter = branchService.getBranchesByFilter(branchFilterDto);
+        return ListResponse.of(branchesByFilter,branchesByFilter.size());
     }
 
 }

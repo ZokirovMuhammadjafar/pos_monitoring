@@ -28,7 +28,7 @@ public class ReflectionUtils {
                 } else if (genericType.getTypeName().equals(Boolean.class.getName())) {
                     field.set(objects, parseBoolean((String) object));
                 } else if ((field.getType().isEnum())) {
-                    Class<?> enums = Class.forName("com.pos.monitoring.entities." + name.toLowerCase().substring(0, 1).toUpperCase() + name.substring(1));
+                    Class<?> enums = Class.forName("com.pos.monitoring.entities.enums." + name.toLowerCase().substring(0, 1).toUpperCase() + name.substring(1));
                     field.set(objects, Enum.valueOf((Class<? extends Enum>) enums, (String) object));
                 }
             }

@@ -11,8 +11,6 @@ import com.pos.monitoring.entities.DailyTerminalInfo;
 import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.entities.TerminalModel;
 import com.pos.monitoring.entities.enums.DailyStatus;
-import com.pos.monitoring.entities.enums.MachineState;
-import com.pos.monitoring.entities.enums.Soft;
 import com.pos.monitoring.repositories.*;
 import com.pos.monitoring.repositories.system.Connection8005;
 import com.pos.monitoring.services.MachineHistoryService;
@@ -181,7 +179,12 @@ public class MachineServiceImpl implements MachineService {
 
     @Override
     public ListResponse getInformationByInstId(MachineFilterDto filterDto) {
-        List<Map<String, String>> instId = machineRepository.getByInstId(filterDto.getInstId());
+        List<Map<String, String>> instId=null;
+        if(filterDto.getInstId()!=null){
+            instId=machineRepository.getByInstId(filterDto.getInstId());
+        }else if(filterDto.getMfos()!=null&&!filterDto.getMfos().isEmpty()) {
+            instId=machineRepository.getbyMfoList(filterDto.getMfos());
+        }
         int total = instId.size();
         return ListResponse.of
                 (

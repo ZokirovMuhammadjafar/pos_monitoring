@@ -9,5 +9,5 @@ import java.util.List;
 @Setter
 public class MachineFilterDto extends PageableSearch {
     private String instId;
-    private List<String> mfo;
+    private List<String> mfos;
 }

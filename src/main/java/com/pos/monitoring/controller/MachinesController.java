@@ -22,7 +22,7 @@ public class MachinesController {
     }
 
     @GetMapping("/all-by-mfos")
-    public SingleResponse getAllStatistics(@RequestBody StatisticDto dto) {
+    public SingleResponse getAllStatistics(StatisticDto dto) {
         SingleResponse all = machineService.getStatistic(dto);
         return all;
     }
