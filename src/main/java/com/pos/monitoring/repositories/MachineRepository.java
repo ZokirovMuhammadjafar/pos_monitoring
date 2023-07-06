@@ -40,9 +40,11 @@ public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
     @Query(value = "select m.state as state, count(m.state) as number from machines m where m.branch_mfo in (?1) group by m.state", nativeQuery = true)
     List<Map<String, Object>> getStatisticByMfos(List<String> mfos);
 
-    List<Machine> findAllByStateOrderByIdAsc(MachineState state, Pageable pageable);
+    List<Machine> findAllByStateOrStateOrderByIdAsc(MachineState state,MachineState state2, Pageable pageable);
 
     int countAllByState(MachineState state);
+
+    int countAllByStateOrState(MachineState state, MachineState state2);
 
     @Query("select count(m) from Machine m where m.instId = ?1 and (m.state=0 or m.state=3)")
     Long getAllWorkingTerminal(String instId);

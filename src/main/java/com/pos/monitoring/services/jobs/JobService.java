@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+//@Profile(value = "dev")
 @Profile(value = "prod")
 @Service
 @RequiredArgsConstructor
@@ -54,28 +55,29 @@ public class JobService {
         logger.info("------------ Calculate transaction and count end calculate------------");
     }
 
+    /**
+     * this method take all terminals changed without 9006 9004 9002
+     */
     @Scheduled(cron = "0 0 18 * * *")
     public void synchronizeMachine() {
-        System.out.println("------------ Machines start synchronization------------");
+        logger.info("------------ Machines start synchronization------------");
         for (int i = 0; i < 600_000; i = i + 100) {
             machineService.synchronizeDailyChanges(i);
             System.out.println(i);
         }
-        System.out.println("------------ Machines end synchronization------------");
+        logger.info("------------ Machines end synchronization------------");
     }
-
-    @Scheduled(cron = "0 50 23 * * *")
-    public void synchronizeFix() {
-        logger.info("---------------------fix begin---------------------");
-        machineService.synchronizeFix();
-        logger.info("---------------------fix end---------------------");
-    }
-
-    @Scheduled(cron = "0 55 23 * * *")
-    public void synchronizeAuthCode() {
-        logger.info("---------------------auth code begin---------------------");
-        machineService.synchronizeAuthCode();
-        logger.info("---------------------auth code end---------------------");
+    /**
+     * this method take all terminals changed with 9006 9004 9002
+     */
+    @Scheduled(cron = "0 0 21 * * *")
+    public void synchronizeMachineWithBanksChosen(){
+        logger.info("------------ Machines start 9006 9004 9002 synchronization------------");
+        for (int i = 0; i < 600_000; i = i + 100) {
+            machineService.synchronizeDailyChangesWithBanksChosen(i);
+            System.out.println(i);
+        }
+        logger.info("------------ Machines end 9006 9004 9002 synchronization------------");
     }
 
 

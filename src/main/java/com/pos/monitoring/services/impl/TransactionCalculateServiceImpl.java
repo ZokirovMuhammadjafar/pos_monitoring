@@ -1,7 +1,6 @@
 package com.pos.monitoring.services.impl;
 
 import com.pos.monitoring.dtos.pageable.TransactionCalculatePageableSearch;
-import com.pos.monitoring.entities.TerminalModel;
 import com.pos.monitoring.entities.TransactionCalculate;
 import com.pos.monitoring.repositories.TransactionCalculateRepository;
 import com.pos.monitoring.services.TransactionCalculateService;

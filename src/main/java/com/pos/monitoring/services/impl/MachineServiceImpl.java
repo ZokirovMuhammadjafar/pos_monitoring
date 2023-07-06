@@ -1,17 +1,16 @@
 package com.pos.monitoring.services.impl;
 
-import com.pos.monitoring.dtos.request.StatisticDto;
-import com.pos.monitoring.entities.enums.MachineState;
-import com.pos.monitoring.entities.enums.Soft;
 import com.pos.monitoring.dtos.pageable.MachineFilterDto;
+import com.pos.monitoring.dtos.request.StatisticDto;
 import com.pos.monitoring.dtos.response.ListResponse;
 import com.pos.monitoring.dtos.response.SingleResponse;
 import com.pos.monitoring.entities.Branch;
-import com.pos.monitoring.entities.DailyTerminalInfo;
 import com.pos.monitoring.entities.Machine;
-import com.pos.monitoring.entities.TerminalModel;
-import com.pos.monitoring.entities.enums.DailyStatus;
-import com.pos.monitoring.repositories.*;
+import com.pos.monitoring.entities.enums.MachineState;
+import com.pos.monitoring.repositories.BranchRepository;
+import com.pos.monitoring.repositories.DailyTerminalInfoRepository;
+import com.pos.monitoring.repositories.MachineRepository;
+import com.pos.monitoring.repositories.TransactionInfoRepository;
 import com.pos.monitoring.repositories.system.Connection8005;
 import com.pos.monitoring.services.MachineHistoryService;
 import com.pos.monitoring.services.MachineService;
@@ -27,7 +26,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,21 +36,20 @@ public class MachineServiceImpl implements MachineService {
     private final MachineRepository machineRepository;
     private final BranchRepository branchRepository;
     private final MachineHistoryService machineHistoryService;
-    private final TerminalModelRepository terminalModelRepository;
     private final DailyTerminalInfoRepository dailyTerminalInfoRepository;
     private final TransactionInfoRepository transactionInfoRepository;
     Logger logger = LogManager.getLogger(MachineServiceImpl.class);
 
-    private synchronized static void create(Machine machine, TerminalModel validPrefix) {
+    private synchronized static void create(Machine machine) {
         if (machine.getIsContract()) {
             if (machine.getTerminalId() != null && machine.getMerchantId() != null && machine.getInstId() != null) {
-                if (validPrefix.getValid()) {
+                if (machine.getStatus().equals("A")) {
                     machine.setState(MachineState.HAS_CONTRACT_WITH_7003);
                 } else {
                     machine.setState(MachineState.HAS_CONTRACT_NOT_7003);
                 }
             } else if (machine.getTerminalId() == null && machine.getMerchantId() == null && machine.getInstId() != null) {
-                if (validPrefix.getValid()) {
+                if (machine.getStatus().equals("A")) {
                     machine.setState(MachineState.HAS_CONTRACT_STAY_WAREHOUSE);
                 } else {
                     machine.setState(MachineState.HAS_CONTRACT_NOT_7003);
@@ -60,13 +57,13 @@ public class MachineServiceImpl implements MachineService {
             }
         } else {
             if (machine.getTerminalId() != null && machine.getMerchantId() != null && machine.getInstId() != null) {
-                if (validPrefix.getValid()) {
+                if (machine.getStatus().equals("A")) {
                     machine.setState(MachineState.HAS_NOT_CONTRACT_WORKING_7003);
                 } else {
                     machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
                 }
             } else if (machine.getTerminalId() == null && machine.getMerchantId() == null && machine.getInstId() != null) {
-                if (validPrefix.getValid()) {
+                if (machine.getStatus().equals("A")) {
                     machine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
                 } else {
                     machine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
@@ -99,44 +96,31 @@ public class MachineServiceImpl implements MachineService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void synchronizeFix() {
-        List<DailyTerminalInfo> dailyTerminalInfoFix = connection8005.getDailyTerminalInfoFix();
-        for (DailyTerminalInfo terminalInfoFix : dailyTerminalInfoFix) {
-            Machine machina = machineRepository.findBySrNumberAndDeleted(terminalInfoFix.getSrNumber(), false);
-            terminalInfoFix.setMachine(machina);
-            terminalInfoFix.setStatus(DailyStatus.FIXED);
-            dailyTerminalInfoRepository.save(terminalInfoFix);
+    public void synchronizeDailyChangesWithBanksChosen(int i) {
+        List<Machine> allChangeMachines = connection8005.getAllMachinesChangeWithBanksChosen(i);
+        for (Machine machine : allChangeMachines) {
+            String branchMfo = machine.getBranchMfo();
+            if (branchMfo != null) {
+                Branch branch = branchRepository.findByMfoAndDeletedFalse(branchMfo);
+                if (branch == null) {
+                    logger.error("branch topilmadi  ===  >>> {}", branchMfo);
+                    continue;
+                }
+                machine.setBranch(branch);
+            }
+            if (machine.getSrNumber() != null && machine.getSrNumber().length() <= 3) {
+                logger.error("machinada xatolik ===>>>>  {} ", machine.toString());
+                continue;
+            }
+            machine.setPrefix(machine.getSrNumber().substring(0, 3));
+            stateChoose(machine);
         }
     }
 
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void synchronizeAuthCode() {
-        List<DailyTerminalInfo> dailyTerminalInfoAuthCode = connection8005.getDailyTerminalInfoAuthCode();
-        for (DailyTerminalInfo terminalInfoAuthCode : dailyTerminalInfoAuthCode) {
-            Machine machina = machineRepository.findBySrNumberAndDeleted(terminalInfoAuthCode.getSrNumber(), false);
-            terminalInfoAuthCode.setMachine(machina);
-            terminalInfoAuthCode.setStatus(DailyStatus.AUTH_CODE);
-            dailyTerminalInfoRepository.save(terminalInfoAuthCode);
-        }
-    }
 
     @Override
     public void deleteByPrefix(String prefix) {
         machineRepository.deleteByPrefix(prefix);
-    }
-
-    @Override
-    public void updateValid(TerminalModel terminalModel) {
-        List<Machine> machineStream = machineRepository.findPrefix(terminalModel.getPrefix()).collect(Collectors.toList());
-        Executors.newFixedThreadPool(8).submit(() -> {
-            machineStream.forEach(machine -> {
-                create(machine, terminalModel);
-                machine.setUpdateDate(new Date());
-                machineRepository.save(machine);
-            });
-        });
     }
 
     @Override
@@ -203,25 +187,17 @@ public class MachineServiceImpl implements MachineService {
     }
 
     private void stateChoose(Machine machine) {
-        TerminalModel validPrefix = terminalModelRepository.findByPrefixAndDeleted(machine.getPrefix(), false);
         Machine oldMachine = machineRepository.findBySrNumberAndDeleted(machine.getSrNumber(), false);
-        if (validPrefix == null) {
-            logger.error("prefix yoq === >>> {} ", machine.getPrefix());
-            return;
-        }
-        if (machine.getSoft() == null && validPrefix.getName().contains("920")) {
-            machine.setSoft(Soft.UZPOS);
-        }
-        machine.setModel(validPrefix.getName());
         if (oldMachine == null) {
-            create(machine, validPrefix);
+            create(machine);
             machineRepository.saveAndFlush(machine);
         } else {
             if (!machine.getInstId().equals(oldMachine.getInstId())) {
                 machineHistoryService.createChangeInst(oldMachine, machine);
-                return;
+                oldMachine.setBranch(machine.getBranch());
+                oldMachine.setBranchMfo(machine.getBranchMfo());
             }
-            if (validPrefix.getValid()) {
+            if (machine.getStatus().equals("A")) {
                 if (machine.getIsContract() && oldMachine.getIsContract()) {
                     if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_STAY_WAREHOUSE) && machine.getMerchantId() != null && machine.getTerminalId() != null) {
                         oldMachine.setState(MachineState.HAS_CONTRACT_WITH_7003);
@@ -271,13 +247,17 @@ public class MachineServiceImpl implements MachineService {
                         oldMachine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
                     }
                 }
-            } else {
+            }
+            else {
                 if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_NOT_7003) && !machine.getIsContract()) {
                     oldMachine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
                 } else if (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_NOT_7003) && machine.getIsContract()) {
                     oldMachine.setState(MachineState.HAS_CONTRACT_NOT_7003);
                 }
             }
+            oldMachine.setMcc(machine.getMcc());
+            oldMachine.setMerchantName(machine.getMerchantName());
+            oldMachine.setStatus(machine.getStatus());
             oldMachine.setUpdateDate(new Date());
             oldMachine.setSoft(machine.getSoft());
             oldMachine.setModel(machine.getModel());

@@ -11,43 +11,25 @@ public interface ConstantQueries {
                          m.terminal_id                                                                    as terminal_id,
                          m.merchant_id                                                                    as merchant_id,
                          m.soft                                                                           as soft,
-                         b.code                                                                           as branch_mfo,
+                         coalesce(m.mfo2,b.code)                                                          as branch_mfo,
                          b.id                                                                             as branch_id,
-                         m.status7003                                                                     as status_7003,
+                         m.status7003                                                                     as status,
                          m.merchant_name                                                                  as merchant_name,
+                         m.mcc                                                                            as mcc,
+                         ml.name                                                                          as model,
                          (case when length(b.bank_code) = 4 then '0' || b.bank_code else b.bank_code end) as inst_id
                   from (select *
                         from machine l
                         where l.state <> 2
                           and l.type_id = 6
-                          and l.sync_date > current_date - interval '1 day' + interval '18 hour'
+                          and (l.updated_date > current_date - interval '1 day' + interval '18 hour' or l.synced)
                           and l.model_id in (-2, -1, 840)
-                        order by l.sync_date
+                        order by l.machine_id
                         offset ? limit 100) as m
-                       
                            inner join branch b on m.branch_id = b.id
+                           inner join model ml on ml.id = m.model_id
                       and bank_code not in ('9006', '9004', '9002')) as t;
-                        """;
-    String GET_DAILY_AUTH_CODE = """
-            select a.sr_number, a.billing_type
-            from auth_code a
-                     inner join branch b on a.branch_id = b.id
-                and bank_code not in ('9006', '9004', '9002')
-            where a.creation_date > current_timestamp - interval '1 day'
-            order by a.creation_date;
-            """;
-
-    String GET_DAILY_FIX = """
-            select a.sr_number, a2.code as application_number
-            from application_machine a
-                     inner join application a2 on a2.id = a.application_id
-                     inner join machine m on a.machine_id = m.id
-                     inner join branch b on m.branch_id = b.id
-                and bank_code not in ('9006', '9004', '9002')
-            where m.type_id = 6
-              and a.updated_date > current_stamp - interval '1 day'
-              and a.machine_status like 'Transmitted';
-            """;
+                                                           """;
 
     String GET_TABLE_BY_INST = """
             with soft_data as (select mfo                           as mfo,
@@ -98,7 +80,7 @@ public interface ConstantQueries {
                     group by sd.mfo;
                     """;
 
-    String GET_TABLE_BY_MFOS= """
+    String GET_TABLE_BY_MFOS = """
             with soft_data as (select mfo                           as mfo,
                                                                       max(bs.id)                    as id,
                                                                       coalesce(soft, 'NULL')        as soft,
@@ -138,6 +120,36 @@ public interface ConstantQueries {
                                                      inner join model_data md on sd.mfo = md.mfo
                                                      inner join counts c on c.branch_mfo = sd.mfo
                                             group by sd.mfo;
+            """;
+
+    String GET_ALL_CHANGE_MACHINES_WITH_BANKS_CHOSEN = """
+             select t.*,
+                    (case
+                         when checker(inst_id := t.branch_mfo, sr_number := t.sr_number) is false
+                             then checker(inst_id := t.branch_mfo, sr_number := upper(t.sr_number))
+                         else true end) as is_contract
+             from (select m.sr_number                                                                      as sr_number,
+                          m.terminal_id                                                                    as terminal_id,
+                          m.merchant_id                                                                    as merchant_id,
+                          m.soft                                                                           as soft,
+                          coalesce(m.mfo2,b.code)                                                          as branch_mfo,
+                          b.id                                                                             as branch_id,
+                          m.status7003                                                                     as status,
+                          m.merchant_name                                                                  as merchant_name,
+                          m.mcc                                                                            as mcc,
+                          ml.name                                                                          as model,
+                          (case when length(b.bank_code) = 4 then '0' || b.bank_code else b.bank_code end) as inst_id
+                   from (select *
+                         from machine l
+                         where l.state <> 2
+                           and l.type_id = 6
+                           and (l.updated_date > current_date - interval '1 day' + interval '18 hour' or l.synced)
+                           and l.model_id in (-2, -1, 840)
+                         order by l.machine_id
+                         offset ? limit 100) as m
+                            inner join branch b on m.branch_id = b.id
+                            inner join model ml on ml.id = m.model_id
+                       and bank_code in ('9006', '9004', '9002')) as t;
             """;
 
 }

@@ -66,7 +66,7 @@ public class PlumServiceImpl implements PlumService {
                 return;
             }
         } else {
-            int countAllByState = machineRepository.countAllByState(MachineState.HAS_CONTRACT_WITH_7003);
+            int countAllByState = machineRepository.countAllByStateOrState(MachineState.HAS_CONTRACT_WITH_7003,MachineState.HAS_NOT_CONTRACT_WORKING_7003);
             int cycles = (int) Math.ceil((float) countAllByState / 10);
             dailySynchronize = new DailySynchronize(todayAsString, countAllByState, cycles, 0, Boolean.FALSE);
             dailySynchronizeRepository.save(dailySynchronize);
@@ -78,7 +78,7 @@ public class PlumServiceImpl implements PlumService {
         Map<String, Object> body = convertToBody(yesterday);
 
         for (int cycle = dailySynchronize.getCycle(); cycle < dailySynchronize.getCycles(); cycle++) {
-            List<Machine> machines = machineRepository.findAllByStateOrderByIdAsc(MachineState.HAS_CONTRACT_WITH_7003, PageRequest.of(cycle, 10));
+            List<Machine> machines = machineRepository.findAllByStateOrStateOrderByIdAsc(MachineState.HAS_CONTRACT_WITH_7003,MachineState.HAS_NOT_CONTRACT_WORKING_7003, PageRequest.of(cycle, 10));
             if (machines.isEmpty()) {
                 return;
             }

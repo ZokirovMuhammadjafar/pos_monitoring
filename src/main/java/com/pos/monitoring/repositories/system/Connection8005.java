@@ -1,11 +1,9 @@
 package com.pos.monitoring.repositories.system;
 
-import com.pos.monitoring.entities.DailyTerminalInfo;
 import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.repositories.system.queries.ConstantQueries;
 import com.pos.monitoring.utils.ReflectionUtils;
 import lombok.SneakyThrows;
-import lombok.Synchronized;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.stereotype.Repository;
@@ -15,9 +13,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Repository
-public  class  Connection8005 {
+public class Connection8005 {
 
     @Value("${8005.connection-db.url}")
     private String URL;
@@ -27,9 +27,9 @@ public  class  Connection8005 {
     private String PASSWORD;
     @Value("${8005.connection-db.username}")
     private String USERNAME;
-    private Connection connection;
+    private ConcurrentMap<String, Connection> connectionMap=new ConcurrentHashMap<>(2);
 
-    private synchronized List<Map<String, Object>>  getResultQuery(PreparedStatement preparedStatement) throws SQLException {
+    private synchronized List<Map<String, Object>> getResultQuery(PreparedStatement preparedStatement, String name) throws SQLException {
         List<Map<String, Object>> list = new LinkedList<>();
         ResultSet resultSet;
         try {
@@ -52,42 +52,35 @@ public  class  Connection8005 {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            connection.close();
-            connection = null;
+            connectionMap.get(name).close();
+            connectionMap.remove(name);
         }
         return list;
     }
 
     @SneakyThrows
     public synchronized List<Machine> getAllMachinesChange(int a) {
-        getConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_ALL_CHANGE_MACHINES);
+        getConnection("ALL");
+        PreparedStatement preparedStatement = connectionMap.get("ALL").prepareStatement(ConstantQueries.GET_ALL_CHANGE_MACHINES);
         preparedStatement.setInt(1, a);
-        List<Map<String, Object>> list = getResultQuery(preparedStatement);
+        List<Map<String, Object>> list = getResultQuery(preparedStatement,"ALL");
         return ReflectionUtils.mapToClassList(list, Machine.class);
     }
 
-    @SneakyThrows
-    public synchronized List<DailyTerminalInfo>getDailyTerminalInfoAuthCode(){
-        getConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_DAILY_AUTH_CODE);
-        List<Map<String, Object>> list = getResultQuery(preparedStatement);
-        return ReflectionUtils.mapToClassList(list, DailyTerminalInfo.class);
-    }
 
     @SneakyThrows
-    public synchronized List<DailyTerminalInfo>getDailyTerminalInfoFix(){
-        getConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement(ConstantQueries.GET_DAILY_FIX);
-        List<Map<String, Object>> list = getResultQuery(preparedStatement);
-        return ReflectionUtils.mapToClassList(list, DailyTerminalInfo.class);
-    }
-
-    @SneakyThrows
-    private synchronized void getConnection() {
+    private synchronized void getConnection(String name) {
         DriverManagerDataSource driverManagerDataSource = new DriverManagerDataSource(URL, USERNAME, PASSWORD);
         driverManagerDataSource.setDriverClassName(DRIVER);
-        connection = driverManagerDataSource.getConnection();
+        connectionMap.put(name, driverManagerDataSource.getConnection());
     }
 
+    @SneakyThrows
+    public List<Machine> getAllMachinesChangeWithBanksChosen(int i) {
+        getConnection("BANKS_CHOSEN");
+        PreparedStatement preparedStatement = connectionMap.get("BANKS_CHOSEN").prepareStatement(ConstantQueries.GET_ALL_CHANGE_MACHINES_WITH_BANKS_CHOSEN);
+        preparedStatement.setInt(1, i);
+        List<Map<String, Object>> list = getResultQuery(preparedStatement,"BANKS_CHOSEN");
+        return ReflectionUtils.mapToClassList(list, Machine.class);
+    }
 }
