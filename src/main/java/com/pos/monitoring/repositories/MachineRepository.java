@@ -9,14 +9,12 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
-import static com.pos.monitoring.repositories.system.queries.ConstantQueries.GET_TABLE_BY_INST;
 import static com.pos.monitoring.repositories.system.queries.ConstantQueries.GET_TABLE_BY_MFOS;
+import static com.pos.monitoring.repositories.system.queries.ConstantQueries.REPORT_QUERY_POS_MONITORING;
 
 @Repository
 public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
-
 
     Machine findBySrNumberAndDeleted(String srNumber, boolean deleted);
 
@@ -24,31 +22,35 @@ public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
     @Query("update Machine m set m.deleted = true where m.prefix = ?1 ")
     void deleteByPrefix(String prefix);
 
-    @Query("from Machine m where m.deleted=false and m.prefix=?1")
-    Stream<Machine> findPrefix(String prefix);
-
-
-    @Query(value = "select m.state as state,count(m.state) as number from machines m where m.inst_id= ?1 group by m.state", nativeQuery = true)
-    List<Map<String, Object>> getStat(String instId);
-
-    @Query(value = GET_TABLE_BY_INST, nativeQuery = true)
-    List<Map<String, String>> getByInstId(String instId);
-
-    @Query(value = "select m.state as state, count(m.state) as number from machines m where m.inst_id= ?1 group by m.state", nativeQuery = true)
-    List<Map<String, Object>> getState(String instId);
-
     @Query(value = "select m.state as state, count(m.state) as number from machines m where m.branch_mfo in (?1) group by m.state", nativeQuery = true)
     List<Map<String, Object>> getStatisticByMfos(List<String> mfos);
 
     List<Machine> findAllByStateOrStateOrderByIdAsc(MachineState state,MachineState state2, Pageable pageable);
-
-    int countAllByState(MachineState state);
-
-    int countAllByStateOrState(MachineState state, MachineState state2);
-
-    @Query("select count(m) from Machine m where m.instId = ?1 and (m.state=0 or m.state=3)")
-    Long getAllWorkingTerminal(String instId);
-
+    @Query(value = """
+            select *
+            from machines
+            where state in (0, 3)
+              and daily_transaction_level > -1
+            order by daily_transaction_level desc
+            LIMIT ?1 OFFSET ?2 ;
+            """,nativeQuery = true)
+    List<Machine>getAllTerminalsByTransactionLevel(Integer limit,Integer offset);
+    @Query(value = """
+            select *
+            from machines
+            where state in (0, 3)
+              and daily_transaction_level = -1
+            order by id desc
+            LIMIT ?1 OFFSET ?2 ;
+            """,nativeQuery = true)
+    List<Machine>findAllByDailyTransactionLevel(Integer limit,Integer offset);
+    @Query(value = "select count(*) from machines m where m.state in (0,3) and m.daily_transaction_level >-1",nativeQuery = true)
+    int countAllTerminalsWithoutKassa();
     @Query(value = GET_TABLE_BY_MFOS,nativeQuery = true)
     List<Map<String, String>> getbyMfoList(List<String> mfo);
+    @Query(value = "select count(*) from machines m where m.state in (0,3) and m.daily_transaction_level =-1",nativeQuery = true)
+    int countAllTerminalsWithKassa();
+
+    @Query(value = REPORT_QUERY_POS_MONITORING,nativeQuery = true)
+    List<Map<String,Object>>report(String mfo);
 }

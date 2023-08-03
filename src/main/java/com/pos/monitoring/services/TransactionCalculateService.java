@@ -4,7 +4,9 @@ import com.pos.monitoring.dtos.pageable.TransactionCalculatePageableSearch;
 import com.pos.monitoring.entities.TransactionCalculate;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
+
 public interface TransactionCalculateService {
 
-    Page<TransactionCalculate> getAll(TransactionCalculatePageableSearch pageableSearch);
+    List<TransactionCalculate> getAll(TransactionCalculatePageableSearch pageableSearch);
 }

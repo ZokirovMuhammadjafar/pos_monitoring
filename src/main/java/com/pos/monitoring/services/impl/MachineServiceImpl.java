@@ -7,6 +7,7 @@ import com.pos.monitoring.dtos.response.SingleResponse;
 import com.pos.monitoring.entities.Branch;
 import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.entities.enums.MachineState;
+import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.repositories.BranchRepository;
 import com.pos.monitoring.repositories.DailyTerminalInfoRepository;
 import com.pos.monitoring.repositories.MachineRepository;
@@ -22,10 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -81,13 +79,13 @@ public class MachineServiceImpl implements MachineService {
             if (branchMfo != null) {
                 Branch branch = branchRepository.findByMfoAndDeletedFalse(branchMfo);
                 if (branch == null) {
-                    logger.error("branch topilmadi  ===  >>> {}", branchMfo);
+                    logger.error("bank topilmadi  ===  >>>  {}", branchMfo);
                     continue;
                 }
                 machine.setBranch(branch);
             }
             if (machine.getSrNumber() != null && machine.getSrNumber().length() <= 3) {
-                logger.error("machinada xatolik ===>>>>  {} ", machine.toString());
+                logger.error("machinada xatolik === >>>  {}", machine.toString());
                 continue;
             }
             machine.setPrefix(machine.getSrNumber().substring(0, 3));
@@ -128,7 +126,10 @@ public class MachineServiceImpl implements MachineService {
         List<Map<String, Object>> statisticByMfos = machineRepository.getStatisticByMfos(dto.getMfos());
         String today = TimeUtils.toYYYYmmDD(new Date());
         int workingCount = transactionInfoRepository.countAllByTodayAndMfoIn(today, dto.getMfos());
-        int transactionCount = transactionInfoRepository.sumAllByTodayAndMfoIn(today, dto.getMfos());
+        Optional<Integer> transactionCount = transactionInfoRepository.sumAllCountByTodayAndMfoIn(today, dto.getMfos());
+        Optional<Double> transactionAmount = transactionInfoRepository.sumAllAmountByTodayAndMfoIn(today, dto.getMfos());
+        Optional<Integer> allMcc = transactionInfoRepository.countAllMcc(dto.getMfos());
+
         Map<String, Long> map = new HashMap<>();
         map.put("allTerminal", 0L);
         map.put("notWorking", 0L);
@@ -141,22 +142,22 @@ public class MachineServiceImpl implements MachineService {
         }
         map.put("onCount", (long) workingCount);
         map.put("offCount", (map.get("working") - workingCount));
-        map.put("transaction", (long) transactionCount);
+        transactionCount.ifPresent(integer -> map.put("transaction", integer.longValue()));
+        transactionAmount.ifPresent(integer -> map.put("transaction_sum", (long) (integer/100_000_000)));
+        allMcc.ifPresent(integer -> map.put("kassa_terminals", integer.longValue()));
         return SingleResponse.of(map);
     }
 
     @Override
     public ListResponse getInformationByInstId(MachineFilterDto filterDto) {
-        List<Map<String, String>> instId = null;
-        if (filterDto.getInstId() != null) {
-            instId = machineRepository.getByInstId(filterDto.getInstId());
-        } else if (filterDto.getMfos() != null && !filterDto.getMfos().isEmpty()) {
-            instId = machineRepository.getbyMfoList(filterDto.getMfos());
+        if (filterDto.getMfos().isEmpty()) {
+            throw new ValidatorException("MFOS_IS_NOT_COME");
         }
-        int total = instId.size();
+        List<Map<String, String>> machinesByInstIdOrMfos = machineRepository.getbyMfoList(filterDto.getMfos());
+        int total = machinesByInstIdOrMfos.size();
         return ListResponse.of
                 (
-                        instId
+                        machinesByInstIdOrMfos
                                 .stream()
                                 .skip(filterDto.getPageNumber())
                                 .limit(filterDto.getPageSize())
@@ -171,17 +172,14 @@ public class MachineServiceImpl implements MachineService {
                 map.put("allTerminal", map.get("allTerminal") + count);
                 map.put("hasContractTerminal", map.get("hasContractTerminal") + count);
             }
-            case HAS_CONTRACT_STAY_WAREHOUSE, HAS_CONTRACT_NOT_7003 -> {//4
+            case HAS_CONTRACT_STAY_WAREHOUSE -> {//4
                 map.put("notWorking", map.get("notWorking") + count);
                 map.put("allTerminal", map.get("allTerminal") + count);
                 map.put("hasContractTerminal", map.get("hasContractTerminal") + count);
             }
             case HAS_NOT_CONTRACT_WORKING_7003 -> {//3
                 map.put("allTerminal", map.get("allTerminal") + count);
-            }
-            case HAS_NOT_CONTRACT_STAY_WAREHOUSE -> {//6
-                map.put("notContractNotWorking", count);
-                map.put("allTerminal", map.get("allTerminal") + count);
+                map.put("working", map.get("working") + count);
             }
         }
     }
@@ -194,8 +192,11 @@ public class MachineServiceImpl implements MachineService {
         } else {
             if (!machine.getInstId().equals(oldMachine.getInstId())) {
                 machineHistoryService.createChangeInst(oldMachine, machine);
-                oldMachine.setBranch(machine.getBranch());
+                oldMachine.setInstId(machine.getInstId());
+            }
+            if (!machine.getBranchMfo().equals(oldMachine.getBranchMfo())) {
                 oldMachine.setBranchMfo(machine.getBranchMfo());
+                oldMachine.setBranch(machine.getBranch());
             }
             if (machine.getStatus().equals("A")) {
                 if (machine.getIsContract() && oldMachine.getIsContract()) {
@@ -247,8 +248,7 @@ public class MachineServiceImpl implements MachineService {
                         oldMachine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
                     }
                 }
-            }
-            else {
+            } else {
                 if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_NOT_7003) && !machine.getIsContract()) {
                     oldMachine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
                 } else if (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_NOT_7003) && machine.getIsContract()) {

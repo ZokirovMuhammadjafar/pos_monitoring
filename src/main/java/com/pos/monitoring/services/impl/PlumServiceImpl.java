@@ -6,9 +6,9 @@ import com.pos.monitoring.dtos.response.plum.PlumDailyTransactionInfoDto;
 import com.pos.monitoring.entities.DailySynchronize;
 import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.entities.TransactionCalculate;
-import com.pos.monitoring.entities.enums.CalculateType;
-import com.pos.monitoring.entities.enums.MachineState;
 import com.pos.monitoring.entities.TransactionInfo;
+import com.pos.monitoring.entities.enums.CalculateType;
+import com.pos.monitoring.entities.enums.SynchronizeType;
 import com.pos.monitoring.repositories.DailySynchronizeRepository;
 import com.pos.monitoring.repositories.MachineRepository;
 import com.pos.monitoring.repositories.TransactionCalculateRepository;
@@ -20,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +36,7 @@ import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 @RequiredArgsConstructor
 public class PlumServiceImpl implements PlumService {
 
+    private static final Logger logger = LogManager.getLogger(PlumServiceImpl.class);
     private final RestTemplates restTemplates;
     private final MachineRepository machineRepository;
     private final TransactionInfoRepository transactionInfoRepository;
@@ -46,40 +46,35 @@ public class PlumServiceImpl implements PlumService {
     public String TOTAL_COUNT_URL;
     @Value("${plum.organizationInn}")
     public String ORGANIZATION_INN;
-    private static final Logger logger = LogManager.getLogger(PlumServiceImpl.class);
+
+    private static Date previousTime(int dayOfMonth) {
+        Calendar yesterdayCalendar = Calendar.getInstance();
+        yesterdayCalendar.add(dayOfMonth, -1);
+        Date yesterday = yesterdayCalendar.getTime();
+        return yesterday;
+    }
 
     @Override
     @Transactional(propagation = Propagation.SUPPORTS)
     public void getDailyTransactionInfo() {
         logger.info("------------ Transaction count start synchronization------------");
+
         Date today = new Date();
 
         String todayAsString = TimeUtils.toYYYYmmDD(today);
 
-        DailySynchronize dailySynchronize;
-        Optional<DailySynchronize> dailySynchronizeOptional = dailySynchronizeRepository.findByToday(todayAsString);
-
-        if (dailySynchronizeOptional.isPresent()) {
-            dailySynchronize = dailySynchronizeOptional.get();
-            if (dailySynchronize.getCycle() == dailySynchronize.getCycles()) {
-                logger.info("------------ Transaction count end synchronization------------");
-                return;
-            }
-        } else {
-            int countAllByState = machineRepository.countAllByStateOrState(MachineState.HAS_CONTRACT_WITH_7003,MachineState.HAS_NOT_CONTRACT_WORKING_7003);
-            int cycles = (int) Math.ceil((float) countAllByState / 10);
-            dailySynchronize = new DailySynchronize(todayAsString, countAllByState, cycles, 0, Boolean.FALSE);
-            dailySynchronizeRepository.save(dailySynchronize);
-        }
-
-        Date yesterday = TimeUtils.minus(today, Calendar.DATE, 1);
+        DailySynchronize dailySynchronize = getDailySynchronize(todayAsString, SynchronizeType.TYPICAL);
+        if (dailySynchronize == null) return;
+        Date yesterday = previousTime(Calendar.DAY_OF_YEAR);
 
         Map<String, String> header = getHeader();
         Map<String, Object> body = convertToBody(yesterday);
-
-        for (int cycle = dailySynchronize.getCycle(); cycle < dailySynchronize.getCycles(); cycle++) {
-            List<Machine> machines = machineRepository.findAllByStateOrStateOrderByIdAsc(MachineState.HAS_CONTRACT_WITH_7003,MachineState.HAS_NOT_CONTRACT_WORKING_7003, PageRequest.of(cycle, 10));
+        for (int cycle = dailySynchronize.getCycle(),counter = 0; cycle < dailySynchronize.getCycles(); cycle++,counter++) {
+            List<Machine> machines = machineRepository.getAllTerminalsByTransactionLevel(10, cycle);
             if (machines.isEmpty()) {
+                continue;
+            }
+            if (counter == 1000) {
                 return;
             }
             PDailyTransactionRequestDto requestItemDto = new PDailyTransactionRequestDto();
@@ -87,7 +82,6 @@ public class PlumServiceImpl implements PlumService {
                 if (!ObjectUtils.isEmpty(machine.getTerminalId()) && !ObjectUtils.isEmpty(machine.getMerchantId())) {
                     long begin = System.currentTimeMillis();
                     logger.info("sending request to plum machine sr_number = {} terminal_id={} merchant_id={} item={}", machine.getSrNumber(), machine.getTerminalId(), machine.getMerchantId(), cycle);
-
                     try {
                         sendAndSaveTransaction(header, body, requestItemDto, machine, today, todayAsString, yesterday);
                     } catch (Exception e) {
@@ -98,40 +92,119 @@ public class PlumServiceImpl implements PlumService {
                     logger.info("request have finished time = {}", System.currentTimeMillis() - begin);
                 }
             }
+            dailySynchronize.setCycle(cycle);
+            dailySynchronizeRepository.save(dailySynchronize);
         }
 
         dailySynchronize.setCycle(dailySynchronize.getCycles());
+        dailySynchronize.setCalculate(true);
         dailySynchronizeRepository.save(dailySynchronize);
         logger.info("------------ Transaction count end synchronization------------");
     }
 
     @Override
     @Transactional(propagation = Propagation.SUPPORTS)
-    public void calculateTransactionAndCount() {
+    public void getDailyTransactionInfoCassiaTerminals() {
+        logger.info("------------ Transaction count start synchronization------------");
         Date today = new Date();
         String todayAsString = TimeUtils.toYYYYmmDD(today);
+        DailySynchronize dailySynchronize = getDailySynchronize(todayAsString, SynchronizeType.KASSA);
+        if (dailySynchronize == null) return;
+        Date yesterday = previousTime(Calendar.DAY_OF_YEAR);
 
-        Optional<DailySynchronize> dailySynchronizeOptional = dailySynchronizeRepository.findByToday(todayAsString);
-        if (dailySynchronizeOptional.isPresent()) {
-            DailySynchronize dailySynchronize = dailySynchronizeOptional.get();
-            if (dailySynchronize.getCycle() == dailySynchronize.getCycles() && !dailySynchronize.isCalculate()) {
+        Map<String, String> header = getHeader();
+        Map<String, Object> body = convertToBody(yesterday);
 
-                Date weekAgo = TimeUtils.minus(today, Calendar.WEEK_OF_YEAR, 1);
-                List<Object[]> weeklyTransaction = transactionInfoRepository.getAllByTransactionDate(weekAgo);
-                if (!ObjectUtils.isEmpty(weeklyTransaction)) {
-                    saveTransactionCalculateByType(weeklyTransaction, todayAsString, CalculateType.WEEKLY);
-                }
-
-                Date monthAgo = TimeUtils.minus(today, Calendar.MONTH, 1);
-                List<Object[]> monthlyTransaction = transactionInfoRepository.getAllByTransactionDate(monthAgo);
-                if (!ObjectUtils.isEmpty(weeklyTransaction)) {
-                    saveTransactionCalculateByType(monthlyTransaction, todayAsString, CalculateType.MONTHLY);
-                }
-
-                dailySynchronize.setCalculate(Boolean.TRUE);
-                dailySynchronizeRepository.save(dailySynchronize);
+        for (int cycle = dailySynchronize.getCycle(); cycle < dailySynchronize.getCycles(); cycle++) {
+            List<Machine> machines = machineRepository.findAllByDailyTransactionLevel(10, cycle);
+            if (machines.isEmpty()) {
+                continue;
             }
+            PDailyTransactionRequestDto requestItemDto = new PDailyTransactionRequestDto();
+            for (Machine machine : machines) {
+                if (!ObjectUtils.isEmpty(machine.getTerminalId()) && !ObjectUtils.isEmpty(machine.getMerchantId())) {
+                    long begin = System.currentTimeMillis();
+                    logger.info("sending request to plum machine sr_number = {} terminal_id={} merchant_id={} item={}", machine.getSrNumber(), machine.getTerminalId(), machine.getMerchantId(), cycle);
+                    try {
+                        sendAndSaveTransaction(header, body, requestItemDto, machine, today, todayAsString, yesterday);
+                    } catch (Exception e) {
+                        dailySynchronize.setCycle(cycle);
+                        dailySynchronizeRepository.save(dailySynchronize);
+                        logger.info(e.getMessage());
+                    }
+                    logger.info("request have finished time = {}", System.currentTimeMillis() - begin);
+                }
+            }
+            dailySynchronize.setCycle(cycle);
+            dailySynchronizeRepository.save(dailySynchronize);
         }
+
+        dailySynchronize.setCycle(dailySynchronize.getCycles());
+        dailySynchronize.setCalculate(true);
+        dailySynchronizeRepository.save(dailySynchronize);
+        logger.info("------------ Transaction count end synchronization------------");
+    }
+
+    private DailySynchronize getDailySynchronize(String todayAsString, SynchronizeType synchronizeType) {
+        DailySynchronize dailySynchronize;
+        Optional<DailySynchronize> dailySynchronizeOptional = dailySynchronizeRepository.findByTodayAndSynchronizationType(todayAsString, synchronizeType);
+        if (dailySynchronizeOptional.isPresent()) {
+            dailySynchronize = dailySynchronizeOptional.get();
+            if (dailySynchronize.getCycle() == dailySynchronize.getCycles()) {
+                logger.info("------------ Transaction count end synchronization------------");
+                return null;
+            }
+        } else {
+            int countAllByState = 0;
+            if (synchronizeType.equals(SynchronizeType.TYPICAL)) {
+                countAllByState = machineRepository.countAllTerminalsWithoutKassa();
+            } else {
+                countAllByState = machineRepository.countAllTerminalsWithKassa();
+            }
+            int cycles = (int) Math.ceil((float) countAllByState / 10);
+            dailySynchronize = new DailySynchronize(todayAsString, countAllByState, synchronizeType, cycles, 0, Boolean.FALSE);
+            dailySynchronizeRepository.save(dailySynchronize);
+        }
+        return dailySynchronize;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.SUPPORTS)
+    public void calculateTransactionAndCount() {
+//        Date today = new Date();
+//        String todayAsString = TimeUtils.toYYYYmmDD(today);
+//
+//        Optional<DailySynchronize> dailySynchronizeOptional = dailySynchronizeRepository.findByToday(todayAsString);
+//        if (dailySynchronizeOptional.isPresent()) {
+//            DailySynchronize dailySynchronize = dailySynchronizeOptional.get();
+//            if (dailySynchronize.getCycle() == dailySynchronize.getCycles() && !dailySynchronize.isCalculate()) {
+//
+//                List<Object[]> weeklyTransaction = getWeeklyTransaction(todayAsString);
+//                monthlyTransaction(todayAsString, weeklyTransaction);
+//
+//                dailySynchronize.setCalculate(Boolean.TRUE);
+//                dailySynchronizeRepository.save(dailySynchronize);
+//            }
+//        }
+    }
+
+    private void monthlyTransaction(String todayAsString, List<Object[]> weeklyTransaction) {
+        Date monthAgo = previousTime(Calendar.MONTH);
+
+        List<Object[]> monthlyTransaction = transactionInfoRepository.getAllByTransactionDate(monthAgo);
+        if (!ObjectUtils.isEmpty(weeklyTransaction)) {
+            saveTransactionCalculateByType(monthlyTransaction, todayAsString, CalculateType.MONTHLY);
+        }
+    }
+
+    private List<Object[]> getWeeklyTransaction(String todayAsString) {
+        Date weekAgo = previousTime(Calendar.WEEK_OF_YEAR);
+
+        List<Object[]> weeklyTransaction = transactionInfoRepository.getAllByTransactionDate(weekAgo);
+        if (!ObjectUtils.isEmpty(weeklyTransaction)) {
+            saveTransactionCalculateByType(weeklyTransaction, todayAsString, CalculateType.WEEKLY);
+        }
+        return weeklyTransaction;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -147,8 +220,8 @@ public class PlumServiceImpl implements PlumService {
                 machine.setTransactionCount(data.getTotalCount());
                 machine.setTransactionDebit(data.getTotalDebit());
                 machine.setTransactionDate(today);
+                machine.setSyncedTransaction(true);
                 machineRepository.saveAndFlush(machine);
-
                 TransactionInfo transactionInfo = TransactionInfo.build(machine, data, todayAsString, yesterday);
                 transactionInfoRepository.saveAndFlush(transactionInfo);
             }

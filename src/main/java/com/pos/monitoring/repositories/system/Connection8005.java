@@ -27,7 +27,7 @@ public class Connection8005 {
     private String PASSWORD;
     @Value("${8005.connection-db.username}")
     private String USERNAME;
-    private ConcurrentMap<String, Connection> connectionMap=new ConcurrentHashMap<>(2);
+    private ConcurrentMap<String, Connection> connectionMap = new ConcurrentHashMap<>(2);
 
     private synchronized List<Map<String, Object>> getResultQuery(PreparedStatement preparedStatement, String name) throws SQLException {
         List<Map<String, Object>> list = new LinkedList<>();
@@ -58,12 +58,20 @@ public class Connection8005 {
         return list;
     }
 
+    public synchronized List<Map<String, Object>> getReportSingleMFO(final String mfo) throws SQLException {
+         getConnection("REPORT");
+         PreparedStatement preparedStatement=connectionMap.get("REPORT").prepareStatement(ConstantQueries.REPORT_QUERY_7005);
+        preparedStatement.setString(1, mfo);
+        preparedStatement.setString(2, mfo);
+        return getResultQuery(preparedStatement, "REPORT");
+    }
+
     @SneakyThrows
     public synchronized List<Machine> getAllMachinesChange(int a) {
         getConnection("ALL");
         PreparedStatement preparedStatement = connectionMap.get("ALL").prepareStatement(ConstantQueries.GET_ALL_CHANGE_MACHINES);
         preparedStatement.setInt(1, a);
-        List<Map<String, Object>> list = getResultQuery(preparedStatement,"ALL");
+        List<Map<String, Object>> list = getResultQuery(preparedStatement, "ALL");
         return ReflectionUtils.mapToClassList(list, Machine.class);
     }
 
@@ -80,7 +88,7 @@ public class Connection8005 {
         getConnection("BANKS_CHOSEN");
         PreparedStatement preparedStatement = connectionMap.get("BANKS_CHOSEN").prepareStatement(ConstantQueries.GET_ALL_CHANGE_MACHINES_WITH_BANKS_CHOSEN);
         preparedStatement.setInt(1, i);
-        List<Map<String, Object>> list = getResultQuery(preparedStatement,"BANKS_CHOSEN");
+        List<Map<String, Object>> list = getResultQuery(preparedStatement, "BANKS_CHOSEN");
         return ReflectionUtils.mapToClassList(list, Machine.class);
     }
 }

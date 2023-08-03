@@ -38,12 +38,15 @@ public class Machine extends AbstractEntity {
     protected Soft soft;
     protected String model;
     protected String prefix;
+
+    protected Boolean syncedTransaction =false;
     protected String merchantName;
     protected Integer transactionCount;
     protected Double transactionDebit;
     @Temporal(value = TemporalType.DATE)
     protected Date transactionDate;
     protected String status;
+    protected Integer dailyTransactionLevel=0;
     protected Boolean isContract = false;
     protected String mcc;
 

@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/transaction-calculates")
 @RequiredArgsConstructor
@@ -21,7 +23,7 @@ public class TransactionCalculateController {
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     @PostMapping(value = "/get-all", produces = "application/json")
     public ListResponse getAll(@RequestBody TransactionCalculatePageableSearch pageableSearch) {
-        Page<TransactionCalculate> transactionCalculates = transactionCalculateService.getAll(pageableSearch);
-        return ListResponse.of(transactionCalculates, TransactionCalculate.class);
+        List<TransactionCalculate> transactionCalculates = transactionCalculateService.getAll(pageableSearch);
+        return ListResponse.of(transactionCalculates,transactionCalculates.size());
     }
 }

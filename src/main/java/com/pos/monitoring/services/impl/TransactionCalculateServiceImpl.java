@@ -2,45 +2,50 @@ package com.pos.monitoring.services.impl;
 
 import com.pos.monitoring.dtos.pageable.TransactionCalculatePageableSearch;
 import com.pos.monitoring.entities.TransactionCalculate;
+import com.pos.monitoring.entities.enums.CalculateType;
+import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.repositories.TransactionCalculateRepository;
+import com.pos.monitoring.repositories.TransactionInfoRepository;
 import com.pos.monitoring.services.TransactionCalculateService;
-import com.pos.monitoring.utils.DaoUtils;
-import com.pos.monitoring.utils.TimeUtils;
-import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
-import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class TransactionCalculateServiceImpl implements TransactionCalculateService {
 
     private final TransactionCalculateRepository transactionCalculateRepository;
+    private final TransactionInfoRepository transactionInfoRepository;
 
     @Override
-    public Page<TransactionCalculate> getAll(TransactionCalculatePageableSearch search) {
-        String today = TimeUtils.toYYYYmmDD(new Date());
-        return transactionCalculateRepository.findAll((Specification<TransactionCalculate>) (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
+    public List<TransactionCalculate> getAll(TransactionCalculatePageableSearch search) {
+        if (ObjectUtils.isEmpty(search.getMfos())) {
+            throw new ValidatorException("DONT_COME_MFOS");
+        }
+        Calendar calendar = Calendar.getInstance();
+        if (search.getCalculateType().equals(CalculateType.WEEKLY)) {
+            calendar.add(Calendar.WEEK_OF_YEAR, -1);
+        } else {
+            calendar.add(Calendar.MONTH, -1);
+        }
 
-            if (!ObjectUtils.isEmpty(search.getMfos())) {
-                predicates.add(root.get("mfo").in(search.getMfos()));
-            }
+        List<TransactionCalculate> allByTransactionFromToDate = transactionInfoRepository.getAllByTransactionFromToDate(calendar.getTime(), new Date(), search.getMfos())
+                .stream()
+                .map((a) -> {
+                    TransactionCalculate transactionCalculate = new TransactionCalculate();
+                    transactionCalculate.setAmount((Double) a.get("amount"));
+                    transactionCalculate.setTotal(Integer.parseInt(a.get("total") + ""));
+                    transactionCalculate.setMfo("" + a.get("mfo"));
+                    transactionCalculate.setId(System.currentTimeMillis());
+                    return transactionCalculate;
+                }).collect(Collectors.toList());
+        return allByTransactionFromToDate;
 
-            if (!ObjectUtils.isEmpty(search.getCalculateType())) {
-                predicates.add(cb.equal(root.get("calculateType"), search.getCalculateType()));
-            }
-
-            predicates.add(cb.equal(root.get("today"), today));
-
-            predicates.add(cb.equal(root.get("deleted"), Boolean.FALSE));
-            return cb.and(predicates.toArray(new Predicate[0]));
-        }, DaoUtils.toPaging(search));
     }
 }

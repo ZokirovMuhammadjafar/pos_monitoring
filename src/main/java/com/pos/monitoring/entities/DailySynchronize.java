@@ -1,5 +1,6 @@
 package com.pos.monitoring.entities;
 
+import com.pos.monitoring.entities.enums.SynchronizeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -23,6 +24,7 @@ public class DailySynchronize extends AbstractEntity {
     private String today;
 
     private Integer total;
+    private SynchronizeType synchronizationType = SynchronizeType.TYPICAL;
 
     @Column(columnDefinition = "int default 0")
     private int cycles;

@@ -120,4 +120,35 @@ public class ReflectionUtils {
     }
 
 
+    public static List<Map<String, String>> maptoMapString(List<Map<String, Object>> report) {
+        List<Map<String, String>> stringMapList = new ArrayList<>();
+        report.forEach(a -> {
+            stringMapList.add(parseMapObjectsToStrings(a));
+        });
+        return stringMapList;
+    }
+
+    private static Map<String, String> parseMapObjectsToStrings(Map<String, Object> map) {
+        Map<String,String>stringMap=new HashMap<>();
+        map.forEach((a,b)->{
+            if(b instanceof String){
+                stringMap.put(a,b+"");
+            }else if(b instanceof Double){
+                stringMap.put(a, String.valueOf(b+""));
+            }
+            else if(b instanceof Integer){
+                stringMap.put(a, String.valueOf(b+""));
+            }
+            else if(b instanceof Short){
+                stringMap.put(a, String.valueOf(b+""));
+            }
+            else if(b instanceof Date){
+                stringMap.put(a, String.valueOf(b+""));
+            } else if(!(b+"").equals("null")){
+                stringMap.put(a,b+"");
+            }
+
+        });
+        return stringMap;
+    }
 }
