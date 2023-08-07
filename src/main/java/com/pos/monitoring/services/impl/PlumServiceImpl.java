@@ -56,7 +56,7 @@ public class PlumServiceImpl implements PlumService {
 
     @Override
     @Transactional(propagation = Propagation.SUPPORTS)
-    public void getDailyTransactionInfo() {
+    public void getDailyTransactionInfoTypical() {
         logger.info("------------ Transaction count start synchronization------------");
 
         Date today = new Date();

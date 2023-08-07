@@ -27,10 +27,53 @@ public class JobService {
     public void synchronizeDailyTransactionTypicalCount() {
         logger.info("------------ Transaction typical count start synchronization------------");
 
-        plumService.getDailyTransactionInfo();
+        plumService.getDailyTransactionInfoTypical();
 
         logger.info("------------ Transaction typical count end synchronization------------");
     }
+
+    /**
+     * Accept {}
+     * Run every 10 minute,
+     * This job get all transaction Greater Million information from Plum Tech
+     */
+    @Scheduled(fixedRate = 600000)
+    public void synchronizeDailyTransactionGreaterMillionCount() {
+        logger.info("------------ Transaction typical count start synchronization------------");
+
+        plumService.getDailyTransactionInfoTypical();
+
+        logger.info("------------ Transaction typical count end synchronization------------");
+    }
+
+    /**
+     * Accept {}
+     * Run every 10 minute,
+     * This job get all transaction information from Plum Tech between 1 000 000 and 100 000
+     */
+    @Scheduled(fixedRate = 600000)
+    public void synchronizeDailyTransactionBetweenMillionAndHundredThousand() {
+        logger.info("------------ Transaction typical count start synchronization------------");
+
+        plumService.getDailyTransactionInfoTypical();
+
+        logger.info("------------ Transaction typical count end synchronization------------");
+    }
+
+    /**
+     * Accept {}
+     * Run every 10 minute,
+     * This job get all transaction information from Plum Tech Lower than 100 000
+     */
+    @Scheduled(fixedRate = 600000)
+    public void synchronizeDailyTransactionLowerThanHundredThousand() {
+        logger.info("------------ Transaction typical count start synchronization------------");
+
+        plumService.getDailyTransactionInfoTypical();
+
+        logger.info("------------ Transaction typical count end synchronization------------");
+    }
+
 
     /**
      * Accept {}
@@ -45,6 +88,10 @@ public class JobService {
 
         logger.info("------------ Transaction cassie count end synchronization------------");
     }
+
+
+
+
 
     /**
      * Accept {}

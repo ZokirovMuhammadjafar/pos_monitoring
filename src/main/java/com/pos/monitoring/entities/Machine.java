@@ -2,6 +2,7 @@ package com.pos.monitoring.entities;
 
 import com.pos.monitoring.entities.enums.MachineState;
 import com.pos.monitoring.entities.enums.Soft;
+import com.pos.monitoring.entities.enums.SynchronizeType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,6 +48,9 @@ public class Machine extends AbstractEntity {
     protected Date transactionDate;
     protected String status;
     protected Integer dailyTransactionLevel=0;
+
+    @Enumerated(value = EnumType.STRING)
+    protected SynchronizeType synchronizationType=SynchronizeType.TYPICAL;
     protected Boolean isContract = false;
     protected String mcc;
 

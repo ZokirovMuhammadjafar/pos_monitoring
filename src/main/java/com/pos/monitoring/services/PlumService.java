@@ -2,7 +2,7 @@ package com.pos.monitoring.services;
 
 public interface PlumService {
 
-    void getDailyTransactionInfo();
+    void getDailyTransactionInfoTypical();
     void getDailyTransactionInfoCassiaTerminals();
 
     void calculateTransactionAndCount();

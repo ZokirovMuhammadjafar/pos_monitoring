@@ -32,48 +32,49 @@ public interface ConstantQueries {
                                                            """;
 
     String GET_TABLE_BY_MFOS = """
-               with soft_data as (select mfo                           as mfo,
-                                                                                                                                                     max(bs.id)                    as id,
-                                                                                                                                                     coalesce(soft, 'NULL')        as soft,
-                                                                                                                                                     count(*)                      as count,
-                                                                                                                                                     sum(transaction_count)   as transactionCount,
-                                                                                                                                                      pg_catalog.floor(sum(transaction_debit)/100000000)  as transactionDebit,
-                                                                                                                                                     max(bs.name) || ' ' || bs.mfo as name
-                                                                                                                                              from machines ms
-                                                                                                                                                       left join branches bs on ms.branch_id = bs.id
-                                                                                                                                              where ms.deleted = false
-                                                                           
-                                                                                                                                                and bs.deleted = false
-                                                                                                                                                and mfo in ( ?1 )
-                                                                                                                                              group by mfo, soft),
-                                                                                                                                model_data as (select mfo                     as mfo,
-                                                                                                                                                      coalesce(model, 'NULL') as model,
-                                                                                                                                                      count(*)                as count
-                                                                                                                                               from machines ms
-                                                                                                                                                        left join branches bs on ms.branch_id = bs.id
-                                                                                                                                               where ms.deleted = false
-                                                                                                                                                 and bs.deleted = false
-                                                                                                                                                 and mfo in ( ?1 )
-                                                                                                                                               group by mfo, model),
-                                                                                                                                counts as (select branch_mfo, count(*) as countt,
-                                                                                                                                                  sum(case when  machines.mcc in ('6010','6012','6050') then 1 else 0 end) as mcc_count
-                                                                                                                                          from machines
-                                                                                                                                          where machines.branch_mfo in ( ?1 )
-                                                                                                                                          group by branch_mfo)
-                                                                                                                           select max(sd.name)                                                                         as name_and_mfo,
-                                                                                                                                  max(sd.id)                                                                           as id,
-                                                                                                                                  max(c.countt)                                                                        as count,
-                                                                                                                                  sd.mfo                                                                               as mfo,
-                                                                                                                                  sum(sd.transactionCount)                                                             as transactionCount,
-                                                                                                                                  sum(sd.transactionDebit)                                                             as transactionDebit,
-                                                                                                                                  max(c.mcc_count)  as cash_terminals,
-                                                                                                                                  (select string_agg(soft || '/' || count, ' | ') from soft_data where mfo = sd.mfo)   as soft,
-                                                                                                                                  (select string_agg(model || '/' || count, ' | ') from model_data where mfo = sd.mfo) as model
-                                                                                                                           from soft_data sd
-                                                                                                                                    inner join model_data md on sd.mfo = md.mfo
-                                                                                                                                inner join counts c on c.branch_mfo = sd.mfo
-                                                                                                                       group by sd.mfo;
-            """;
+            with soft_data as (select mfo                                                  as mfo,
+                                      max(bs.id)                                           as id,
+                                      coalesce(soft, 'NULL')                               as soft,
+                                      count(*)                                             as count,
+                                      sum(transaction_count)                               as transactionCount,
+                                      pg_catalog.floor(sum(transaction_debit) / 100000000) as transactionDebit,
+                                      max(bs.name) || ' ' || bs.mfo                        as name
+                               from machines ms
+                                        left join branches bs on ms.branch_id = bs.id
+                               where ms.deleted = false
+
+                                 and bs.deleted = false
+                                 and mfo in (?1)
+                               group by mfo, soft),
+                 model_data as (select mfo                     as mfo,
+                                       coalesce(model, 'NULL') as model,
+                                       count(*)                as count
+                                from machines ms
+                                         left join branches bs on ms.branch_id = bs.id
+                                where ms.deleted = false
+                                  and bs.deleted = false
+                                  and mfo in (?1)
+                                group by mfo, model),
+                 counts as (select branch_mfo,
+                                   count(*)                                                                  as countt,
+                                   sum(case when machines.mcc in ('6010', '6012', '6050') then 1 else 0 end) as mcc_count
+                            from machines
+                            where machines.branch_mfo in (?1)
+                            group by branch_mfo)
+            select max(sd.name)                                                                         as name_and_mfo,
+                   max(sd.id)                                                                           as id,
+                   max(c.countt)                                                                        as count,
+                   sd.mfo                                                                               as mfo,
+                   sum(sd.transactionCount)                                                             as transactionCount,
+                   sum(sd.transactionDebit)                                                             as transactionDebit,
+                   max(c.mcc_count)                                                                     as cash_terminals,
+                   (select string_agg(soft || '/' || count, ' | ') from soft_data where mfo = sd.mfo)   as soft,
+                   (select string_agg(model || '/' || count, ' | ') from model_data where mfo = sd.mfo) as model
+            from soft_data sd
+                     inner join model_data md on sd.mfo = md.mfo
+                     inner join counts c on c.branch_mfo = sd.mfo
+            group by sd.mfo;
+                           """;
 
     String GET_ALL_CHANGE_MACHINES_WITH_BANKS_CHOSEN = """
              select t.*,
@@ -105,7 +106,7 @@ public interface ConstantQueries {
                        and bank_code in ('9006', '9004', '9002')) as t;
             """;
 
-    String REPORT_QUERY_POS_MONITORING= """
+    String REPORT_QUERY_POS_MONITORING = """
             with m as (select m.branch_mfo as   mfo,
                               m.model,
                               m.sr_number,
@@ -126,7 +127,7 @@ public interface ConstantQueries {
             where mfo = ?1
             """;
 
-    String REPORT_QUERY_7005= """
+    String REPORT_QUERY_7005 = """
             with auth as (select ac.sr_number, max(ac.creation_date) as date, count(*) as count
                           from auth_code ac
                                    inner join branch b on b.id = ac.branch_id
