@@ -1,4 +1,4 @@
-package com.pos.monitoring.repositories.system.queries;
+package com.pos.monitoring.repositories.system.specifications;
 
 public interface ConstantQueries {
     String GET_ALL_CHANGE_MACHINES = """

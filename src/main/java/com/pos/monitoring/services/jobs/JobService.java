@@ -1,5 +1,6 @@
 package com.pos.monitoring.services.jobs;
 
+import com.pos.monitoring.entities.enums.SynchronizeType;
 import com.pos.monitoring.services.MachineService;
 import com.pos.monitoring.services.PlumService;
 import lombok.RequiredArgsConstructor;
@@ -9,8 +10,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-//@Profile(value = "dev")
-@Profile(value = "prod")
+@Profile(value = "dev")
+//@Profile(value = "prod")
 @Service
 @RequiredArgsConstructor
 public class JobService {
@@ -27,7 +28,7 @@ public class JobService {
     public void synchronizeDailyTransactionTypicalCount() {
         logger.info("------------ Transaction typical count start synchronization------------");
 
-        plumService.getDailyTransactionInfoTypical();
+        plumService.getDailyTransaction(SynchronizeType.TYPICAL);
 
         logger.info("------------ Transaction typical count end synchronization------------");
     }
@@ -41,7 +42,7 @@ public class JobService {
     public void synchronizeDailyTransactionGreaterMillionCount() {
         logger.info("------------ Transaction typical count start synchronization------------");
 
-        plumService.getDailyTransactionInfoTypical();
+        plumService.getDailyTransaction(SynchronizeType.GREATER_THEN_MILLION);
 
         logger.info("------------ Transaction typical count end synchronization------------");
     }
@@ -55,7 +56,7 @@ public class JobService {
     public void synchronizeDailyTransactionBetweenMillionAndHundredThousand() {
         logger.info("------------ Transaction typical count start synchronization------------");
 
-        plumService.getDailyTransactionInfoTypical();
+        plumService.getDailyTransaction(SynchronizeType.BETWEEN_HUNDRED_THOUSAND_AND_MILLION);
 
         logger.info("------------ Transaction typical count end synchronization------------");
     }
@@ -69,7 +70,7 @@ public class JobService {
     public void synchronizeDailyTransactionLowerThanHundredThousand() {
         logger.info("------------ Transaction typical count start synchronization------------");
 
-        plumService.getDailyTransactionInfoTypical();
+        plumService.getDailyTransaction(SynchronizeType.LOWER_THAN_HUNDRED_THOUSAND);
 
         logger.info("------------ Transaction typical count end synchronization------------");
     }
@@ -84,7 +85,7 @@ public class JobService {
     public void synchronizeDailyTransactionCassieCount() {
         logger.info("------------ Transaction cassie count start synchronization------------");
 
-        plumService.getDailyTransactionInfoCassiaTerminals();
+        plumService.getDailyTransaction(SynchronizeType.KASSA);
 
         logger.info("------------ Transaction cassie count end synchronization------------");
     }
@@ -110,28 +111,28 @@ public class JobService {
     /**
      * this method take all terminals changed without 9006 9004 9002
      */
-    @Scheduled(cron = "0 0 18 * * *")
-    public void synchronizeMachine() {
-        logger.info("------------ Machines start synchronization------------");
-        for (int i = 0; i < 600_000; i = i + 100) {
-            machineService.synchronizeDailyChanges(i);
-            System.out.println(i);
-        }
-        logger.info("------------ Machines end synchronization------------");
-    }
-
-    /**
-     * this method take all terminals changed with 9006 9004 9002
-     */
-    @Scheduled(cron = "0 0 21 * * *")
-    public void synchronizeMachineWithBanksChosen() {
-        logger.info("------------ Machines start 9006 9004 9002 synchronization------------");
-        for (int i = 0; i < 600_000; i = i + 100) {
-            machineService.synchronizeDailyChangesWithBanksChosen(i);
-            System.out.println(i);
-        }
-        logger.info("------------ Machines end 9006 9004 9002 synchronization------------");
-    }
-
+//    @Scheduled(cron = "0 0 18 * * *")
+//    public void synchronizeMachine() {
+//        logger.info("------------ Machines start synchronization------------");
+//        for (int i = 0; i < 600_000; i = i + 100) {
+//            machineService.synchronizeDailyChanges(i);
+//            System.out.println(i);
+//        }
+//        logger.info("------------ Machines end synchronization------------");
+//    }
+//
+//    /**
+//     * this method take all terminals changed with 9006 9004 9002
+//     */
+//    @Scheduled(cron = "0 0 21 * * *")
+//    public void synchronizeMachineWithBanksChosen() {
+//        logger.info("------------ Machines start 9006 9004 9002 synchronization------------");
+//        for (int i = 0; i < 600_000; i = i + 100) {
+//            machineService.synchronizeDailyChangesWithBanksChosen(i);
+//            System.out.println(i);
+//        }
+//        logger.info("------------ Machines end 9006 9004 9002 synchronization------------");
+//    }
+//
 
 }

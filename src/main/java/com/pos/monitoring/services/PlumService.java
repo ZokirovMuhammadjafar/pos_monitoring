@@ -1,9 +1,8 @@
 package com.pos.monitoring.services;
 
+import com.pos.monitoring.entities.enums.SynchronizeType;
+
 public interface PlumService {
 
-    void getDailyTransactionInfoTypical();
-    void getDailyTransactionInfoCassiaTerminals();
-
-    void calculateTransactionAndCount();
+    void getDailyTransaction(SynchronizeType synchronizeType);
 }

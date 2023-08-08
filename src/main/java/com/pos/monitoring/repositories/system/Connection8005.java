@@ -1,7 +1,7 @@
 package com.pos.monitoring.repositories.system;
 
 import com.pos.monitoring.entities.Machine;
-import com.pos.monitoring.repositories.system.queries.ConstantQueries;
+import com.pos.monitoring.repositories.system.specifications.ConstantQueries;
 import com.pos.monitoring.utils.ReflectionUtils;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;

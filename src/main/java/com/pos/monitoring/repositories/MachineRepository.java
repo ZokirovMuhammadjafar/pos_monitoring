@@ -3,8 +3,8 @@ package com.pos.monitoring.repositories;
 import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.entities.enums.MachineState;
 import com.pos.monitoring.entities.enums.SynchronizeType;
+import com.pos.monitoring.repositories.system.specifications.MachineSpecification;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -12,8 +12,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Map;
 
-import static com.pos.monitoring.repositories.system.queries.ConstantQueries.GET_TABLE_BY_MFOS;
-import static com.pos.monitoring.repositories.system.queries.ConstantQueries.REPORT_QUERY_POS_MONITORING;
+import static com.pos.monitoring.repositories.system.specifications.ConstantQueries.GET_TABLE_BY_MFOS;
+import static com.pos.monitoring.repositories.system.specifications.ConstantQueries.REPORT_QUERY_POS_MONITORING;
 
 @Repository
 public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
@@ -29,6 +29,12 @@ public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
     List<Map<String, Object>> getStatisticByMfos(List<String> mfos);
 
     List<Machine> findAllByStateOrStateOrderByIdAsc(MachineState state, MachineState state2, Pageable pageable);
+
+    default List<Machine> getAllMachineForTransactionRequest(SynchronizeType synchronizeType,Pageable pageable) {
+      return findAll(MachineSpecification.machinaSyncType(synchronizeType).and(MachineSpecification.machineStatusIn(List.of(MachineState.HAS_CONTRACT_WITH_7003,MachineState.HAS_NOT_CONTRACT_WORKING_7003))).and(MachineSpecification.machineOrderBy("id"))
+       ,pageable).stream().toList();
+    }
+
 
     @Query(value = """
             select *
