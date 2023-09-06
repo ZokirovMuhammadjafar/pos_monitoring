@@ -46,9 +46,8 @@
         <dependency>
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
-            <version>3.19.2</version>
+            <version>4.3.0</version>
         </dependency>
-
         <!--validation etities and dtos-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -116,6 +115,7 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>

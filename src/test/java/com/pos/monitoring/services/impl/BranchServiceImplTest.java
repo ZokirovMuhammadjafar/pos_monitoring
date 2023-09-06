@@ -4,6 +4,7 @@
 //import com.pos.monitoring.dtos.pageable.BranchFilterDto;
 //import com.pos.monitoring.dtos.response.ListResponse;
 //import com.pos.monitoring.services.BranchService;
+//import com.pos.monitoring.services.jobs.JobService;
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
@@ -17,12 +18,12 @@
 //    BranchController branchController;
 //    @Autowired
 //    MachineServiceImpl machineService;
+//    @Autowired
+//    JobService jobService;
 //
 //    @Test
-//    public void bank(){
-//        System.out.println(branchService.getBranchesByFilter(new BranchFilterDto("09006",3L)));
-//
-////        machineService.synchronizeAuthCode();
+//    public void bank() throws InterruptedException {
+//     jobService.changeStatus();
 //    }
 //
 //}

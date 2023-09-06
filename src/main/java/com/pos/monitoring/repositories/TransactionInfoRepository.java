@@ -6,10 +6,7 @@ import com.pos.monitoring.entities.enums.CalculateType;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 public interface TransactionInfoRepository extends SoftDeleteJpaRepository<TransactionInfo> {
@@ -29,6 +26,13 @@ public interface TransactionInfoRepository extends SoftDeleteJpaRepository<Trans
     @Query(value = "select count(*) from machines m where synced_transaction and m.mcc in ('6010','6012','6050') and m.branch_mfo in (?1);",nativeQuery = true)
     Optional<Integer>countAllMcc(List<String> mfos);
 
+    @Query(value = """
+            select terminal_id || merchant_id as terminal_merchant, max(amount) as amount
+            from transaction_infos
+            where create_date > current_timestamp - interval '1 month'
+            group by terminal_id, merchant_id;
+            """,nativeQuery = true)
+    List<Map<String,Object>>getAllMax();
 
 
 

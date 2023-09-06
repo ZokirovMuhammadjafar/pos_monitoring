@@ -16,6 +16,7 @@ import com.pos.monitoring.repositories.TransactionCalculateRepository;
 import com.pos.monitoring.repositories.TransactionInfoRepository;
 import com.pos.monitoring.repositories.system.specifications.MachineSpecification;
 import com.pos.monitoring.services.PlumService;
+import com.pos.monitoring.services.jobs.JobService;
 import com.pos.monitoring.services.system.RestTemplates;
 import com.pos.monitoring.utils.TimeUtils;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,7 @@ public class PlumServiceImpl implements PlumService {
 
     private static final Logger logger = LogManager.getLogger(PlumServiceImpl.class);
     private final RestTemplates restTemplates;
+
     private final MachineRepository machineRepository;
     private final TransactionInfoRepository transactionInfoRepository;
     private final DailySynchronizeRepository dailySynchronizeRepository;
@@ -77,14 +79,14 @@ public class PlumServiceImpl implements PlumService {
             if (machines.isEmpty()) {
                 continue;
             }
-            if (counter == 1000) {
+            if (counter == 1000 || JobService.isBackgroundServiceWork()) {
                 return;
             }
             PDailyTransactionRequestDto requestItemDto = new PDailyTransactionRequestDto();
             for (Machine machine : machines) {
                 if (!ObjectUtils.isEmpty(machine.getTerminalId()) && !ObjectUtils.isEmpty(machine.getMerchantId())) {
                     long begin = System.currentTimeMillis();
-                    logger.info("sending request to plum machine sr_number = {} terminal_id={} merchant_id={} item={}", machine.getSrNumber(), machine.getTerminalId(), machine.getMerchantId(), cycle);
+                    logger.info("sending request from {} to plum machine sr_number = {} terminal_id={} merchant_id={} item={}", synchronizeType.name(),machine.getSrNumber(), machine.getTerminalId(), machine.getMerchantId(), cycle);
                     try {
                         sendAndSaveTransaction(header, body, requestItemDto, machine, today, todayAsString, yesterday);
                     } catch (Exception e) {
@@ -92,7 +94,7 @@ public class PlumServiceImpl implements PlumService {
                         dailySynchronizeRepository.save(dailySynchronize);
                         logger.info(e.getMessage());
                     }
-                    logger.info("request have finished time = {}", System.currentTimeMillis() - begin);
+                    logger.info("request from {} have finished time = {}", synchronizeType.name(),System.currentTimeMillis() - begin);
                 }
             }
             dailySynchronize.setCycle(cycle);
@@ -106,7 +108,7 @@ public class PlumServiceImpl implements PlumService {
     }
 
 
-    private DailySynchronize getDailySynchronize(String todayAsString, SynchronizeType synchronizeType) {
+    private synchronized DailySynchronize  getDailySynchronize(String todayAsString, SynchronizeType synchronizeType) {
         DailySynchronize dailySynchronize;
         Optional<DailySynchronize> dailySynchronizeOptional = dailySynchronizeRepository.findByTodayAndSynchronizationType(todayAsString, synchronizeType);
         if (dailySynchronizeOptional.isPresent()) {
