@@ -126,10 +126,13 @@ public class MachineServiceImpl implements MachineService {
     @Override
     public SingleResponse getStatistic(StatisticDto dto) {
         List<Map<String, Object>> statisticByMfos = machineRepository.getStatisticByMfos(dto.getMfos());
-        String today = TimeUtils.toYYYYmmDD(new Date());
+        Calendar instance = Calendar.getInstance();
+        String today = TimeUtils.toYYYYmmDD(instance.getTime());
         int workingCount = transactionInfoRepository.countAllByTodayAndMfoIn(today, dto.getMfos());
-        Optional<Integer> transactionCount = transactionInfoRepository.sumAllCountByTodayAndMfoIn(today, dto.getMfos());
-        Optional<Double> transactionAmount = transactionInfoRepository.sumAllAmountByTodayAndMfoIn(today, dto.getMfos());
+        instance.add(Calendar.DAY_OF_YEAR, -1);
+        String yesterday = TimeUtils.toYYYYmmDD(instance.getTime());
+        Optional<Integer> transactionCount = transactionInfoRepository.sumAllCountByTodayAndMfoIn(yesterday, dto.getMfos());
+        Optional<Double> transactionAmount = transactionInfoRepository.sumAllAmountByTodayAndMfoIn(yesterday, dto.getMfos());
         Optional<Integer> allMcc = transactionInfoRepository.countAllMcc(dto.getMfos());
 
         Map<String, Long> map = new HashMap<>();
@@ -145,7 +148,7 @@ public class MachineServiceImpl implements MachineService {
         map.put("onCount", (long) workingCount);
         map.put("offCount", (map.get("working") - workingCount));
         transactionCount.ifPresent(integer -> map.put("transaction", integer.longValue()));
-        transactionAmount.ifPresent(integer -> map.put("transaction_sum", (long) (integer/100_000_000)));
+        transactionAmount.ifPresent(integer -> map.put("transaction_sum", (long) (integer / 100_000_000)));
         allMcc.ifPresent(integer -> map.put("kassa_terminals", integer.longValue()));
         return SingleResponse.of(map);
     }
@@ -169,7 +172,7 @@ public class MachineServiceImpl implements MachineService {
 
     @Override
     @Transactional
-    public void updateAllMachineTransactionStatus(List<String>parentMfos) {
+    public void updateAllMachineTransactionStatus(List<String> parentMfos) {
         List<String> mfos = branchService.getBranches(parentMfos, true).stream().map(Branch::getMfo).collect(Collectors.toList());
         machineRepository.updateAllTransactionStatus(mfos);
     }
@@ -257,8 +260,7 @@ public class MachineServiceImpl implements MachineService {
                         oldMachine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
                     }
                 }
-            }
-            else {
+            } else {
                 if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_NOT_7003) && !machine.getIsContract()) {
                     oldMachine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
                 } else if (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_NOT_7003) && machine.getIsContract()) {

@@ -17,15 +17,15 @@ import java.util.List;
 @SpringBootTest
 public class TerminalModelTest {
 
-    @Autowired
-    MachineRepository machineRepository;
-
-    @Test
-    void terminalModelTest(){
-
-    }
-    @Test
-    void createTerminalModel(){
-
-    }
+//    @Autowired
+//    MachineRepository machineRepository;
+//
+//    @Test
+//    void terminalModelTest(){
+//
+//    }
+//    @Test
+//    void createTerminalModel(){
+//
+//    }
 }

@@ -17,6 +17,7 @@ import org.hibernate.annotations.DynamicUpdate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "transaction_calculate")
+@Deprecated(since = "2023-12-23 dan ochirldi bundan foydalanilmaydi")
 public class TransactionCalculate extends AbstractEntity {
 
     @Column(nullable = false)
