@@ -42,7 +42,14 @@ public class TransactionInfo extends AbstractEntity {
     protected String today;
 
     public static TransactionInfo build(Machine machine, PlumDailyTransactionInfoDto infoDto, String todayAsString, Date yesterday) {
-        return new TransactionInfo(machine.getBranchMfo(), machine.getTerminalId(),
-                machine.getMerchantId(), infoDto.getTotalDebit(), infoDto.getTotalCount(), TimeUtils.toYYYYmmDD(yesterday), todayAsString);
+        return new TransactionInfo(
+                machine.getBranchMfo(),
+                machine.getTerminalId(),
+                machine.getMerchantId(),
+                infoDto.getTotalDebit(),
+                infoDto.getTotalCount(),
+                TimeUtils.toYYYYmmDD(yesterday),
+                todayAsString
+        );
     }
 }

@@ -37,4 +37,11 @@ public class MachineSpecification {
             return restriction;
         };
     }
+
+    public static Specification<Machine> isTransaction(boolean b) {
+        return (root, query, criteriaBuilder) -> {
+            Predicate mfoPredicate = criteriaBuilder.equal(root.get("syncedTransaction"),b);
+            return mfoPredicate;
+        };
+    }
 }

@@ -13,6 +13,7 @@ import com.pos.monitoring.repositories.DailyTerminalInfoRepository;
 import com.pos.monitoring.repositories.MachineRepository;
 import com.pos.monitoring.repositories.TransactionInfoRepository;
 import com.pos.monitoring.repositories.system.Connection8005;
+import com.pos.monitoring.services.BranchService;
 import com.pos.monitoring.services.MachineHistoryService;
 import com.pos.monitoring.services.MachineService;
 import com.pos.monitoring.utils.TimeUtils;
@@ -33,6 +34,7 @@ public class MachineServiceImpl implements MachineService {
     private final Connection8005 connection8005;
     private final MachineRepository machineRepository;
     private final BranchRepository branchRepository;
+    private final BranchService branchService;
     private final MachineHistoryService machineHistoryService;
     private final DailyTerminalInfoRepository dailyTerminalInfoRepository;
     private final TransactionInfoRepository transactionInfoRepository;
@@ -165,6 +167,13 @@ public class MachineServiceImpl implements MachineService {
                 );
     }
 
+    @Override
+    @Transactional
+    public void updateAllMachineTransactionStatus(List<String>parentMfos) {
+        List<String> mfos = branchService.getBranches(parentMfos, true).stream().map(Branch::getMfo).collect(Collectors.toList());
+        machineRepository.updateAllTransactionStatus(mfos);
+    }
+
     private void convert(Map<String, Long> map, MachineState state, Long count) {
         switch (state) {
             case HAS_CONTRACT_WITH_7003 -> {//0
@@ -248,7 +257,8 @@ public class MachineServiceImpl implements MachineService {
                         oldMachine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
                     }
                 }
-            } else {
+            }
+            else {
                 if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_NOT_7003) && !machine.getIsContract()) {
                     oldMachine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
                 } else if (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_NOT_7003) && machine.getIsContract()) {

@@ -5,6 +5,8 @@ import com.pos.monitoring.dtos.response.ListResponse;
 import com.pos.monitoring.dtos.response.SingleResponse;
 import com.pos.monitoring.dtos.pageable.MachineFilterDto;
 
+import java.util.List;
+
 public interface MachineService {
     void synchronizeDailyChanges(int i);
 
@@ -16,4 +18,6 @@ public interface MachineService {
     SingleResponse getStatistic(StatisticDto dto);
 
     ListResponse getInformationByInstId(MachineFilterDto filterDto);
+
+    void updateAllMachineTransactionStatus(List<String>parentMfos);
 }

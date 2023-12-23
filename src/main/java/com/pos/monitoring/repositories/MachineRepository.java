@@ -30,9 +30,14 @@ public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
 
     List<Machine> findAllByStateOrStateOrderByIdAsc(MachineState state, MachineState state2, Pageable pageable);
 
-    default List<Machine> getAllMachineForTransactionRequest(SynchronizeType synchronizeType,Pageable pageable) {
-      return findAll(MachineSpecification.machinaSyncType(synchronizeType).and(MachineSpecification.machineStatusIn(List.of(MachineState.HAS_CONTRACT_WITH_7003,MachineState.HAS_NOT_CONTRACT_WORKING_7003))).and(MachineSpecification.machineOrderBy("id"))
-       ,pageable).stream().toList();
+    default List<Machine> getAllMachineForTransactionRequest(SynchronizeType synchronizeType, Pageable pageable) {
+        return findAll(MachineSpecification.machinaSyncType(synchronizeType).and(MachineSpecification.machineStatusIn(List.of(MachineState.HAS_CONTRACT_WITH_7003, MachineState.HAS_NOT_CONTRACT_WORKING_7003))).and(MachineSpecification.machineOrderBy("id"))
+                , pageable).stream().toList();
+    }
+
+    default List<Machine> getAllMachineForTransactionRequest(String mfo, Pageable pageable) {
+        return findAll(MachineSpecification.getBySingleMfo(mfo).and(MachineSpecification.machineStatusIn(List.of(MachineState.HAS_CONTRACT_WITH_7003, MachineState.HAS_NOT_CONTRACT_WORKING_7003))).and(MachineSpecification.isTransaction(false)).and(MachineSpecification.machineOrderBy("id"))
+                , pageable).stream().toList();
     }
 
 
@@ -68,4 +73,8 @@ public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
 
     @Query(value = REPORT_QUERY_POS_MONITORING, nativeQuery = true)
     List<Map<String, Object>> report(String mfo);
+
+    @Modifying
+    @Query(value = "update Machine set syncedTransaction = false where branchMfo in ( ?1 )")
+    void updateAllTransactionStatus(List<String>mfos);
 }
