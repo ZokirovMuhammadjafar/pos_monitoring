@@ -103,6 +103,7 @@ public class PlumServiceImpl implements PlumService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.SUPPORTS)
     public void getDailyTransaction(List<String> mfos) {
         logger.info("------------ Transaction count start synchronization------------");
         Date today = new Date();
@@ -155,7 +156,8 @@ public class PlumServiceImpl implements PlumService {
 //    }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    protected void sendAndSaveTransaction(Map<String, String> header, Map<String, Object> body, PDailyTransactionRequestDto requestItemDto, Machine machine, Date today, String todayAsString, Date yesterday) {
+    protected void sendAndSaveTransaction(Map<String, String> header, Map<String, Object> body, PDailyTransactionRequestDto requestItemDto, Machine old, Date today, String todayAsString, Date yesterday) {
+        Machine machine = machineRepository.getById(old.getId());
         requestItemDto.setMerchantId(machine.getMerchantId());
         requestItemDto.setTerminalId(machine.getTerminalId());
         body.put("terminals", List.of(requestItemDto));
@@ -164,14 +166,14 @@ public class PlumServiceImpl implements PlumService {
         if (!ObjectUtils.isEmpty(responseBody)) {
             PlumDailyTransactionInfoDto data = responseBody.getData();
             if (data.getTotalCount() != 0) {
-                machine.setTransactionCount(data.getTotalCount());
-                machine.setTransactionDebit(data.getTotalDebit());
-                machine.setTransactionDate(yesterday);
-                machine.setSyncedTransaction(true);
-                machineRepository.saveAndFlush(machine);
                 TransactionInfo transactionInfo = TransactionInfo.build(machine, data, todayAsString, yesterday);
                 transactionInfoRepository.saveAndFlush(transactionInfo);
             }
+            machine.setTransactionCount(data.getTotalCount());
+            machine.setTransactionDebit(data.getTotalDebit());
+            machine.setTransactionDate(yesterday);
+            machine.setSyncedTransaction(true);
+            machineRepository.saveAndFlush(machine);
         }
     }
 
