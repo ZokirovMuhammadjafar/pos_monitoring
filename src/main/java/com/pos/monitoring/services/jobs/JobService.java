@@ -1,19 +1,18 @@
 package com.pos.monitoring.services.jobs;
 
 import com.pos.monitoring.entities.enums.SynchronizeType;
-import com.pos.monitoring.repositories.TransactionInfoRepository;
 import com.pos.monitoring.services.MachineService;
 import com.pos.monitoring.services.PlumService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 //@Profile(value = "dev")
 @Profile(value = "prod")
@@ -22,23 +21,10 @@ import java.util.List;
 public class JobService {
     private final MachineService machineService;
     private final PlumService plumService;
-    private final TransactionInfoRepository transactionInfoRepository;
+    public static List<String> mfos = Arrays.asList(
+            "00325" //surhandarya termiz
+    );
     Logger logger = LogManager.getLogger(JobService.class);
-
-    private static boolean suspend=false;
-    public static boolean isBackgroundServiceWork(){
-        return suspend;
-    }
-
-    public static void dontWorkBackgroundService(){
-        suspend=true;
-    }
-
-    public static void workBackgroundService(){
-        suspend=false;
-    }
-
-
 
     /**
      * Accept {}
@@ -61,11 +47,11 @@ public class JobService {
      */
 //    @Scheduled(fixedRate = 600000)
     public void synchronizeDailyTransactionGreaterMillionCount() {
-        logger.info("------------ Transaction GREATER_THEN_MILLION count start synchronization------------");
+        logger.info("------------ Transaction typical count start synchronization------------");
 
         plumService.getDailyTransaction(SynchronizeType.GREATER_THEN_MILLION);
 
-        logger.info("------------ Transaction GREATER_THEN_MILLION count end synchronization------------");
+        logger.info("------------ Transaction typical count end synchronization------------");
     }
 
     /**
@@ -75,11 +61,11 @@ public class JobService {
      */
 //    @Scheduled(fixedRate = 600000)
     public void synchronizeDailyTransactionBetweenMillionAndHundredThousand() {
-        logger.info("------------ Transaction BETWEEN_HUNDRED_THOUSAND_AND_MILLION count start synchronization------------");
+        logger.info("------------ Transaction typical count start synchronization------------");
 
         plumService.getDailyTransaction(SynchronizeType.BETWEEN_HUNDRED_THOUSAND_AND_MILLION);
 
-        logger.info("------------ Transaction BETWEEN_HUNDRED_THOUSAND_AND_MILLION count end synchronization------------");
+        logger.info("------------ Transaction typical count end synchronization------------");
     }
 
     /**
@@ -89,11 +75,11 @@ public class JobService {
      */
 //    @Scheduled(fixedRate = 600000)
     public void synchronizeDailyTransactionLowerThanHundredThousand() {
-        logger.info("------------ Transaction LOWER_THAN_HUNDRED_THOUSAND count start synchronization------------");
+        logger.info("------------ Transaction typical count start synchronization------------");
 
         plumService.getDailyTransaction(SynchronizeType.LOWER_THAN_HUNDRED_THOUSAND);
 
-        logger.info("------------ Transaction LOWER_THAN_HUNDRED_THOUSAND count end synchronization------------");
+        logger.info("------------ Transaction typical count end synchronization------------");
     }
 
 
@@ -105,34 +91,15 @@ public class JobService {
 //    @Scheduled(fixedRate = 600000)
     public void synchronizeDailyTransactionCassieCount() {
         logger.info("------------ Transaction cassie count start synchronization------------");
-
         plumService.getDailyTransaction(SynchronizeType.KASSA);
-
         logger.info("------------ Transaction cassie count end synchronization------------");
     }
 
-//    @Scheduled(cron = "0 50 23 * * *")
-    public void syncedFalseDailyTransaction() throws InterruptedException {
-        logger.info("--------------------------begin sync false---------------------");
-        dontWorkBackgroundService();
-        Thread.sleep(300000);
-        machineService.synchronizeTransactionFalse();
-        logger.info("--------------------------end sync false---------------------");
-    }
-
-//    @Scheduled(cron = "0 57 23 * * *")
-    public void changeStatus() throws InterruptedException {
-        logger.info("------------------- change status begin using transactions-------------------");
-        dontWorkBackgroundService();
-        Thread.sleep(600000);
-        long begin=System.currentTimeMillis();
-        HashMap<String,Double>amountTransaction=new HashMap<>();
-       transactionInfoRepository.getAllMax().forEach(a->{
-           amountTransaction.put(""+a.get("terminal_merchant"),(double) a.get("amount"));
-       });
-        machineService.changesynchronizeType(PageRequest.of(0,1000),amountTransaction);
-        logger.info("------------------- change status end {} using transactions-------------------",System.currentTimeMillis()-begin);
-        workBackgroundService();
+    @Scheduled(fixedRate = 60000)
+    public void synchronizeDailyTransactionWithMfo() {
+        logger.info("------------ Transaction mfo count start synchronization------------");
+        plumService.getDailyTransaction(mfos);
+        logger.info("------------ Transaction mfo count end synchronization------------");
     }
 
 
@@ -176,4 +143,11 @@ public class JobService {
         logger.info("------------ Machines end 9006 9004 9002 synchronization------------");
     }
 
+    //o'ylab korish kerak 12 gacha update qilomasa nima bolarkan deb hozir ulguradi
+    @Scheduled(cron = "0 55 23 * * *")
+    public void updateMachineAllTransactionStatus() {
+        logger.info("---------------------begin update transactionStatus-------------------------------");
+        machineService.updateAllMachineTransactionStatus(mfos);
+        logger.info("---------------------end update transactionStatus-------------------------------");
+    }
 }

@@ -7,23 +7,19 @@ import com.pos.monitoring.dtos.response.SingleResponse;
 import com.pos.monitoring.entities.Branch;
 import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.entities.enums.MachineState;
-import com.pos.monitoring.entities.enums.SynchronizeType;
 import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.repositories.BranchRepository;
 import com.pos.monitoring.repositories.DailyTerminalInfoRepository;
 import com.pos.monitoring.repositories.MachineRepository;
 import com.pos.monitoring.repositories.TransactionInfoRepository;
 import com.pos.monitoring.repositories.system.Connection8005;
-import com.pos.monitoring.repositories.system.specifications.MachineSpecification;
+import com.pos.monitoring.services.BranchService;
 import com.pos.monitoring.services.MachineHistoryService;
 import com.pos.monitoring.services.MachineService;
 import com.pos.monitoring.utils.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +34,7 @@ public class MachineServiceImpl implements MachineService {
     private final Connection8005 connection8005;
     private final MachineRepository machineRepository;
     private final BranchRepository branchRepository;
+    private final BranchService branchService;
     private final MachineHistoryService machineHistoryService;
     private final DailyTerminalInfoRepository dailyTerminalInfoRepository;
     private final TransactionInfoRepository transactionInfoRepository;
@@ -120,10 +117,16 @@ public class MachineServiceImpl implements MachineService {
         }
     }
 
+
+    @Override
+    public void deleteByPrefix(String prefix) {
+        machineRepository.deleteByPrefix(prefix);
+    }
+
     @Override
     public SingleResponse getStatistic(StatisticDto dto) {
         List<Map<String, Object>> statisticByMfos = machineRepository.getStatisticByMfos(dto.getMfos());
-        String today = TimeUtils.toYYYYmmDD(new Date(1692278095312L));
+        String today = TimeUtils.toYYYYmmDD(new Date());
         int workingCount = transactionInfoRepository.countAllByTodayAndMfoIn(today, dto.getMfos());
         Optional<Integer> transactionCount = transactionInfoRepository.sumAllCountByTodayAndMfoIn(today, dto.getMfos());
         Optional<Double> transactionAmount = transactionInfoRepository.sumAllAmountByTodayAndMfoIn(today, dto.getMfos());
@@ -165,41 +168,10 @@ public class MachineServiceImpl implements MachineService {
     }
 
     @Override
-    public void synchronizeTransactionFalse() {
-        machineRepository.synchTransactionFalse();
-    }
-
-    @Override
-    public void changesynchronizeType(PageRequest pageRequest,HashMap<String,Double>amountTransaction) {
-        Page<Machine> all = machineRepository.findAll(MachineSpecification.machineStatusIn(List.of(MachineState.HAS_CONTRACT_WITH_7003,MachineState.HAS_NOT_CONTRACT_WORKING_7003)),pageRequest);
-        List<Machine> content = all.getContent();
-        if (content.size()==0){
-            return;
-        }
-        changeTypesMachine(content,amountTransaction);
-        changesynchronizeType(pageRequest.next(),amountTransaction);
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public  void changeTypesMachine(List<Machine> all,HashMap<String,Double>amountTransaction) {
-        all.forEach(machine->{
-            Double transactionDebit = amountTransaction.get(machine.getTerminalId().concat(machine.getMerchantId()));
-            if(transactionDebit!=null){
-                double v = transactionDebit / 100;
-                if(machine.getSynchronizationType().equals(SynchronizeType.KASSA)||(machine.getMcc()!=null&&machine.getMcc().contains("6012 6010 6050"))){
-                    machine.setSynchronizationType(SynchronizeType.KASSA);
-                } else if(v<=1_000_000D&&v>=100_000D){
-                    machine.setSynchronizationType(SynchronizeType.BETWEEN_HUNDRED_THOUSAND_AND_MILLION);
-                }else if(v>1_000_000D){
-                    machine.setSynchronizationType(SynchronizeType.GREATER_THEN_MILLION);
-                }else if(v<1000_000D&&v>0){
-                    machine.setSynchronizationType(SynchronizeType.LOWER_THAN_HUNDRED_THOUSAND);
-                }else{
-                    machine.setSynchronizationType(SynchronizeType.TYPICAL);
-                }
-            }
-            machineRepository.saveAndFlush(machine);
-        });
+    @Transactional
+    public void updateAllMachineTransactionStatus(List<String>parentMfos) {
+        List<String> mfos = branchService.getBranches(parentMfos, true).stream().map(Branch::getMfo).collect(Collectors.toList());
+        machineRepository.updateAllTransactionStatus(mfos);
     }
 
     private void convert(Map<String, Long> map, MachineState state, Long count) {
@@ -285,7 +257,8 @@ public class MachineServiceImpl implements MachineService {
                         oldMachine.setState(MachineState.HAS_NOT_CONTRACT_STAY_WAREHOUSE);
                     }
                 }
-            } else {
+            }
+            else {
                 if (oldMachine.getState().equals(MachineState.HAS_CONTRACT_NOT_7003) && !machine.getIsContract()) {
                     oldMachine.setState(MachineState.HAS_NOT_CONTRACT_NOT_7003);
                 } else if (oldMachine.getState().equals(MachineState.HAS_NOT_CONTRACT_NOT_7003) && machine.getIsContract()) {

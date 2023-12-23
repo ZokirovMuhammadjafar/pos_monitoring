@@ -12,4 +12,8 @@ import lombok.Setter;
 public class BranchFilterDto extends PageableSearch {
     private String instId;
     private Long regionCode;
+
+    public BranchFilterDto(String instId) {
+        this.instId = instId;
+    }
 }
