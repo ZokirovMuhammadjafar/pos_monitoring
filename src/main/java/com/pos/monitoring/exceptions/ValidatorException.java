@@ -1,6 +1,5 @@
 package com.pos.monitoring.exceptions;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ValidatorException extends RuntimeException{

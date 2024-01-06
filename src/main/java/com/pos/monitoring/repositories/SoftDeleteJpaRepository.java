@@ -19,7 +19,7 @@ public interface SoftDeleteJpaRepository<T extends AbstractEntity> extends JpaRe
     @Transactional
     @Modifying
     default void deleteById(Long id) {
-        findById(id).orElseThrow(() -> new ValidatorException("ENTITY_NOT_FOUND", List.of(id))).setDeleted(true);
+        findById(id).orElseThrow(() -> new LocalizedApplicationException(ErrorCode.ENTITY_NOT_FOUND, List.of(id))).setDeleted(true);
     }
 
     @Override

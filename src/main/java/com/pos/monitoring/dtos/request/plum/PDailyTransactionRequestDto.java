@@ -12,7 +12,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PDailyTransactionRequestDto implements Serializable {
-
     private String terminalId;
     private String merchantId;
 }

@@ -1,6 +1,6 @@
 package com.pos.monitoring.controller;
 
-import com.pos.monitoring.dtos.pageable.BranchFilterDto;
+import com.pos.monitoring.dtos.request.BranchFilterDto;
 import com.pos.monitoring.dtos.response.ListResponse;
 import com.pos.monitoring.entities.Branch;
 import com.pos.monitoring.services.BranchService;

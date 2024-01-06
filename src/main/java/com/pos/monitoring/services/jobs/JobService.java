@@ -26,96 +26,12 @@ public class JobService {
     );
     Logger logger = LogManager.getLogger(JobService.class);
 
-    /**
-     * Accept {}
-     * Run every 10 minute,
-     * This job get all transaction information from Plum Tech
-     */
-//    @Scheduled(fixedRate = 600000)
-    public void synchronizeDailyTransactionTypicalCount() {
-        logger.info("------------ Transaction typical count start synchronization------------");
-
-        plumService.getDailyTransaction(SynchronizeType.TYPICAL);
-
-        logger.info("------------ Transaction typical count end synchronization------------");
-    }
-
-    /**
-     * Accept {}
-     * Run every 10 minute,
-     * This job get all transaction Greater Million information from Plum Tech
-     */
-//    @Scheduled(fixedRate = 600000)
-    public void synchronizeDailyTransactionGreaterMillionCount() {
-        logger.info("------------ Transaction typical count start synchronization------------");
-
-        plumService.getDailyTransaction(SynchronizeType.GREATER_THEN_MILLION);
-
-        logger.info("------------ Transaction typical count end synchronization------------");
-    }
-
-    /**
-     * Accept {}
-     * Run every 10 minute,
-     * This job get all transaction information from Plum Tech between 1 000 000 and 100 000
-     */
-//    @Scheduled(fixedRate = 600000)
-    public void synchronizeDailyTransactionBetweenMillionAndHundredThousand() {
-        logger.info("------------ Transaction typical count start synchronization------------");
-
-        plumService.getDailyTransaction(SynchronizeType.BETWEEN_HUNDRED_THOUSAND_AND_MILLION);
-
-        logger.info("------------ Transaction typical count end synchronization------------");
-    }
-
-    /**
-     * Accept {}
-     * Run every 10 minute,
-     * This job get all transaction information from Plum Tech Lower than 100 000
-     */
-//    @Scheduled(fixedRate = 600000)
-    public void synchronizeDailyTransactionLowerThanHundredThousand() {
-        logger.info("------------ Transaction typical count start synchronization------------");
-
-        plumService.getDailyTransaction(SynchronizeType.LOWER_THAN_HUNDRED_THOUSAND);
-
-        logger.info("------------ Transaction typical count end synchronization------------");
-    }
-
-
-    /**
-     * Accept {}
-     * Run every 10 minute,
-     * This job get all transaction information from Plum Tech
-     */
-//    @Scheduled(fixedRate = 600000)
-    public void synchronizeDailyTransactionCassieCount() {
-        logger.info("------------ Transaction cassie count start synchronization------------");
-        plumService.getDailyTransaction(SynchronizeType.KASSA);
-        logger.info("------------ Transaction cassie count end synchronization------------");
-    }
-
     @Scheduled(fixedRate = 60000)
     public void synchronizeDailyTransactionWithMfo() {
         logger.info("------------ Transaction mfo count start synchronization------------");
         plumService.getDailyTransaction(mfos);
         logger.info("------------ Transaction mfo count end synchronization------------");
     }
-
-
-    /**
-     * Accept {}
-     * Run every 20 minute
-     * This job calculate transaction and count which is taken from Plum Tech
-     */
-//    @Scheduled(fixedRate = 600000)
-//    public void calculateTransactionAndCount() {
-//        logger.info("------------ Calculate transaction and count start calculate ------------");
-//
-//        plumService.calculateTransactionAndCount();
-//
-//        logger.info("------------ Calculate transaction and count end calculate------------");
-//    }
 
     /**
      * this method take all terminals changed without 9006 9004 9002

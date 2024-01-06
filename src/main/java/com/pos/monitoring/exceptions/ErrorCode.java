@@ -1,5 +1,6 @@
 package com.pos.monitoring.exceptions;
 
+//bu exception userlar uchun
 public enum ErrorCode {
     ENTITY_NOT_FOUND,
     SERVER_ERROR_FROM8005,

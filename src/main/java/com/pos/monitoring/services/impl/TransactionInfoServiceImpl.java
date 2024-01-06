@@ -1,6 +1,6 @@
 package com.pos.monitoring.services.impl;
 
-import com.pos.monitoring.dtos.pageable.TransactionInfoPageableSearch;
+import com.pos.monitoring.dtos.request.TransactionInfoPageableSearch;
 import com.pos.monitoring.entities.TransactionInfo;
 import com.pos.monitoring.exceptions.ErrorCode;
 import com.pos.monitoring.exceptions.LocalizedApplicationException;

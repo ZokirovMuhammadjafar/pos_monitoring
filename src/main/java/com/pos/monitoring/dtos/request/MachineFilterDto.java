@@ -1,5 +1,6 @@
-package com.pos.monitoring.dtos.pageable;
+package com.pos.monitoring.dtos.request;
 
+import com.pos.monitoring.dtos.pageable.PageableSearch;
 import lombok.Getter;
 import lombok.Setter;
 

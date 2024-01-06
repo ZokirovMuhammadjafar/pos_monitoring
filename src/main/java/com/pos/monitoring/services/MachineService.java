@@ -3,7 +3,7 @@ package com.pos.monitoring.services;
 import com.pos.monitoring.dtos.request.StatisticDto;
 import com.pos.monitoring.dtos.response.ListResponse;
 import com.pos.monitoring.dtos.response.SingleResponse;
-import com.pos.monitoring.dtos.pageable.MachineFilterDto;
+import com.pos.monitoring.dtos.request.MachineFilterDto;
 
 import java.util.List;
 

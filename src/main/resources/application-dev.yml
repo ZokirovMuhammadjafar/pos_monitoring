@@ -1,12 +1,12 @@
 server:
-  port: 9091
+  port: 9005
 
 
 spring:
   datasource:
-    password: postgres
+    password: 0sEps3bP3RdXkRs7q
     username: postgres
-    url: jdbc:postgresql://localhost:5432/postmonitoring
+    url: jdbc:postgresql://172.17.119.4:6070/postmonitoring
 8005:
   connection-db:
     url: jdbc:postgresql://172.16.21.134:5432/7005

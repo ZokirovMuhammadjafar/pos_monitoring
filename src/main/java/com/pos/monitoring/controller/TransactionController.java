@@ -1,6 +1,6 @@
 package com.pos.monitoring.controller;
 
-import com.pos.monitoring.dtos.pageable.TransactionInfoPageableSearch;
+import com.pos.monitoring.dtos.request.TransactionInfoPageableSearch;
 import com.pos.monitoring.dtos.response.ListResponse;
 import com.pos.monitoring.dtos.response.SingleResponse;
 import com.pos.monitoring.entities.TransactionInfo;

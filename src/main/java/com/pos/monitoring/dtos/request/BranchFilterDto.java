@@ -1,5 +1,6 @@
-package com.pos.monitoring.dtos.pageable;
+package com.pos.monitoring.dtos.request;
 
+import com.pos.monitoring.dtos.pageable.PageableSearch;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,8 +13,4 @@ import lombok.Setter;
 public class BranchFilterDto extends PageableSearch {
     private String instId;
     private Long regionCode;
-
-    public BranchFilterDto(String instId) {
-        this.instId = instId;
-    }
 }

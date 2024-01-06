@@ -2,6 +2,8 @@ package com.pos.monitoring.controller;
 
 import com.auth0.jwt.JWT;
 import com.pos.monitoring.dtos.response.SingleResponse;
+import com.pos.monitoring.exceptions.ErrorCode;
+import com.pos.monitoring.exceptions.LocalizedApplicationException;
 import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.utils.JWTUtil;
 import jakarta.validation.constraints.NotNull;
@@ -25,7 +27,7 @@ public class BaseService {
         if (user.password.equals(PASSWORD) && user.username.equals(USERNAME)) {
             return new SingleResponse(200, Map.of("token", accessToken(user.password(), -1L)));
         } else {
-            throw new ValidatorException("AUTHENTICATION_FAILED");
+            throw new LocalizedApplicationException(ErrorCode.VALUE_DID_NOT_MATCH);
         }
     }
 

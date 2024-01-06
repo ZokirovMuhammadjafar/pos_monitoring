@@ -1,6 +1,6 @@
 package com.pos.monitoring.services.impl;
 
-import com.pos.monitoring.dtos.pageable.BranchFilterDto;
+import com.pos.monitoring.dtos.request.BranchFilterDto;
 import com.pos.monitoring.entities.Branch;
 import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.repositories.BranchRepository;

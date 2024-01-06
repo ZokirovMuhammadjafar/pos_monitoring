@@ -1,5 +1,6 @@
-package com.pos.monitoring.dtos.pageable;
+package com.pos.monitoring.dtos.request;
 
+import com.pos.monitoring.dtos.pageable.PageableSearch;
 import com.pos.monitoring.entities.enums.CalculateType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

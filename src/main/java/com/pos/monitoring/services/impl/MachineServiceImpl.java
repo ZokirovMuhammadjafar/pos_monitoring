@@ -1,6 +1,6 @@
 package com.pos.monitoring.services.impl;
 
-import com.pos.monitoring.dtos.pageable.MachineFilterDto;
+import com.pos.monitoring.dtos.request.MachineFilterDto;
 import com.pos.monitoring.dtos.request.StatisticDto;
 import com.pos.monitoring.dtos.response.ListResponse;
 import com.pos.monitoring.dtos.response.SingleResponse;
@@ -9,12 +9,10 @@ import com.pos.monitoring.entities.Machine;
 import com.pos.monitoring.entities.enums.MachineState;
 import com.pos.monitoring.exceptions.ValidatorException;
 import com.pos.monitoring.repositories.BranchRepository;
-import com.pos.monitoring.repositories.DailyTerminalInfoRepository;
 import com.pos.monitoring.repositories.MachineRepository;
 import com.pos.monitoring.repositories.TransactionInfoRepository;
 import com.pos.monitoring.repositories.system.Connection8005;
 import com.pos.monitoring.services.BranchService;
-import com.pos.monitoring.services.MachineHistoryService;
 import com.pos.monitoring.services.MachineService;
 import com.pos.monitoring.utils.TimeUtils;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +33,6 @@ public class MachineServiceImpl implements MachineService {
     private final MachineRepository machineRepository;
     private final BranchRepository branchRepository;
     private final BranchService branchService;
-    private final MachineHistoryService machineHistoryService;
-    private final DailyTerminalInfoRepository dailyTerminalInfoRepository;
     private final TransactionInfoRepository transactionInfoRepository;
     Logger logger = LogManager.getLogger(MachineServiceImpl.class);
 
@@ -203,7 +199,6 @@ public class MachineServiceImpl implements MachineService {
             machineRepository.saveAndFlush(machine);
         } else {
             if (!machine.getInstId().equals(oldMachine.getInstId())) {
-                machineHistoryService.createChangeInst(oldMachine, machine);
                 oldMachine.setInstId(machine.getInstId());
             }
             if (!machine.getBranchMfo().equals(oldMachine.getBranchMfo())) {

@@ -1,12 +1,12 @@
 package com.pos.monitoring.services;
 
-import com.pos.monitoring.dtos.pageable.TransactionCalculatePageableSearch;
-import com.pos.monitoring.entities.TransactionCalculate;
-import org.springframework.data.domain.Page;
+
+import com.pos.monitoring.dtos.request.TransactionCalculatePageableSearch;
+import com.pos.monitoring.dtos.response.TransactionCalculateDTO;
 
 import java.util.List;
 
 public interface TransactionCalculateService {
 
-    List<TransactionCalculate> getAll(TransactionCalculatePageableSearch pageableSearch);
+    List<TransactionCalculateDTO> getAll(TransactionCalculatePageableSearch pageableSearch);
 }

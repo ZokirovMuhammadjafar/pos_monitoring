@@ -1,10 +1,9 @@
 package com.pos.monitoring.services.impl;
 
-import com.pos.monitoring.dtos.pageable.TransactionCalculatePageableSearch;
-import com.pos.monitoring.entities.TransactionCalculate;
+import com.pos.monitoring.dtos.request.TransactionCalculatePageableSearch;
+import com.pos.monitoring.dtos.response.TransactionCalculateDTO;
 import com.pos.monitoring.entities.enums.CalculateType;
 import com.pos.monitoring.exceptions.ValidatorException;
-import com.pos.monitoring.repositories.TransactionCalculateRepository;
 import com.pos.monitoring.repositories.TransactionInfoRepository;
 import com.pos.monitoring.services.TransactionCalculateService;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +19,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TransactionCalculateServiceImpl implements TransactionCalculateService {
 
-    private final TransactionCalculateRepository transactionCalculateRepository;
+
     private final TransactionInfoRepository transactionInfoRepository;
 
     @Override
-    public List<TransactionCalculate> getAll(TransactionCalculatePageableSearch search) {
+    public List<TransactionCalculateDTO> getAll(TransactionCalculatePageableSearch search) {
         if (ObjectUtils.isEmpty(search.getMfos())) {
             throw new ValidatorException("DONT_COME_MFOS");
         }
@@ -35,10 +34,10 @@ public class TransactionCalculateServiceImpl implements TransactionCalculateServ
             calendar.add(Calendar.MONTH, -1);
         }
 
-        List<TransactionCalculate> allByTransactionFromToDate = transactionInfoRepository.getAllByTransactionFromToDate(calendar.getTime(), new Date(), search.getMfos())
+        List<TransactionCalculateDTO> allByTransactionFromToDate = transactionInfoRepository.getAllByTransactionFromToDate(calendar.getTime(), new Date(), search.getMfos())
                 .stream()
                 .map((a) -> {
-                    TransactionCalculate transactionCalculate = new TransactionCalculate();
+                    TransactionCalculateDTO transactionCalculate = new TransactionCalculateDTO();
                     transactionCalculate.setAmount((Double) a.get("amount"));
                     transactionCalculate.setTotal(Integer.parseInt(a.get("total") + ""));
                     transactionCalculate.setMfo("" + a.get("mfo"));
