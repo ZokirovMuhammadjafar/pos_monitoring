@@ -22,6 +22,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -40,34 +43,27 @@ public class PlumServiceImpl implements PlumService {
     @Value("${plum.organizationInn}")
     public String ORGANIZATION_INN;
 
-    private static Date previousTime(int dayOfMonth) {
-        Calendar yesterdayCalendar = Calendar.getInstance();
-        yesterdayCalendar.add(dayOfMonth, -1);
-        Date yesterday = yesterdayCalendar.getTime();
-        return yesterday;
-    }
     @Override
     @Transactional(propagation = Propagation.SUPPORTS)
     public void getDailyTransaction(List<String> mfos) {
         logger.info("------------ Transaction count start synchronization------------");
-        Date today = new Date();
-        String todayAsString = TimeUtils.toYYYYmmDD(today);
         Set<Branch> branches = branchService.getBranches(mfos, true);
-        Date yesterday = previousTime(Calendar.DAY_OF_YEAR);
+        //bir kun oldingini olish
+        LocalDate yesterday = LocalDate.now().minusDays(1);
         Map<String, String> header = getHeader();
         Map<String, Object> body = convertToBody(yesterday);
         Iterator<Branch> iterator = branches.iterator();
         while (iterator.hasNext()) {
             Branch branch = iterator.next();
             List<Machine> machines = machineRepository.getAllMachineForTransactionRequest(branch.getMfo(), PageRequest.of(0, 10));
-            while (machines.size() > 0) {
+            while (!machines.isEmpty()) {
                 PDailyTransactionRequestDto requestItemDto = new PDailyTransactionRequestDto();
                 for (Machine machine : machines) {
                     if (!ObjectUtils.isEmpty(machine.getTerminalId()) && !ObjectUtils.isEmpty(machine.getMerchantId())) {
                         long begin = System.currentTimeMillis();
                         logger.info("sending request to plum machine sr_number = {} terminal_id={} merchant_id={}", machine.getSrNumber(), machine.getTerminalId(), machine.getMerchantId());
                         try {
-                            sendAndSaveTransaction(header, body, requestItemDto, machine, today, todayAsString, yesterday);
+                            sendAndSaveTransaction(header, body, requestItemDto, machine, yesterday);
                         } catch (Exception e) {
                             logger.info(e.getMessage());
                         }
@@ -82,7 +78,7 @@ public class PlumServiceImpl implements PlumService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    protected void sendAndSaveTransaction(Map<String, String> header, Map<String, Object> body, PDailyTransactionRequestDto requestItemDto, Machine old, Date today, String todayAsString, Date yesterday) {
+    protected void sendAndSaveTransaction(Map<String, String> header, Map<String, Object> body, PDailyTransactionRequestDto requestItemDto, Machine old, LocalDate transactionDay) {
         Machine machine = machineRepository.getById(old.getId());
         requestItemDto.setMerchantId(machine.getMerchantId());
         requestItemDto.setTerminalId(machine.getTerminalId());
@@ -92,12 +88,11 @@ public class PlumServiceImpl implements PlumService {
         if (!ObjectUtils.isEmpty(responseBody)) {
             PlumDailyTransactionInfoDto data = responseBody.getData();
             if (data.getTotalCount() != 0) {
-                TransactionInfo transactionInfo = TransactionInfo.build(machine, data, todayAsString, yesterday);
+                TransactionInfo transactionInfo = TransactionInfo.build(machine, data, transactionDay);
                 transactionInfoRepository.saveAndFlush(transactionInfo);
             }
             machine.setTransactionCount(data.getTotalCount());
             machine.setTransactionDebit(data.getTotalDebit());
-            machine.setTransactionDate(yesterday);
             machine.setSyncedTransaction(true);
             machineRepository.saveAndFlush(machine);
         }
@@ -109,11 +104,11 @@ public class PlumServiceImpl implements PlumService {
         return headerData;
     }
 
-    private Map<String, Object> convertToBody(Date yesterday) {
+    private Map<String, Object> convertToBody(LocalDate yesterday) {
         Map<String, Object> body = new HashMap<>();
         body.put("organizationTin", ORGANIZATION_INN);
-        body.put("dateFrom", TimeUtils.fromDate(yesterday));
-        body.put("dateTo", TimeUtils.toDate(yesterday));
+        body.put("dateFrom", TimeUtils.format(yesterday.atStartOfDay()));
+        body.put("dateTo", TimeUtils.format(LocalDateTime.of(yesterday, LocalTime.MAX)));
         return body;
     }
 }

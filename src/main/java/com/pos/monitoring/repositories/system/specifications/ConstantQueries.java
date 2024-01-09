@@ -32,48 +32,58 @@ public interface ConstantQueries {
                                                            """;
 
     String GET_TABLE_BY_MFOS = """
-            with soft_data as (select mfo                                                  as mfo,
-                                      max(bs.id)                                           as id,
-                                      coalesce(soft, 'NULL')                               as soft,
-                                      count(*)                                             as count,
-                                      sum(transaction_count)                               as transactionCount,
-                                      pg_catalog.floor(sum(transaction_debit) / 100000000) as transactionDebit,
-                                      max(bs.name) || ' ' || bs.mfo                        as name
-                               from machines ms
-                                        left join branches bs on ms.branch_id = bs.id
-                               where ms.deleted = false
-
-                                 and bs.deleted = false
-                                 and mfo in (?1)
-                               group by mfo, soft),
-                 model_data as (select mfo                     as mfo,
-                                       coalesce(model, 'NULL') as model,
-                                       count(*)                as count
+            with general_stat as (select ms.branch_mfo                                        as mfo,
+                                         count(*)                                             as count,
+                                         sum(transaction_count)                               as transactionCount,
+                                         pg_catalog.floor(sum(transaction_debit) / 100000000) as transactionDebit,
+                                         max(b.name) || ' ' || ms.branch_mfo                  as name,
+                                         max(b.id)                                            as id
+                                  from machines ms
+                                           inner join branches b on b.id = ms.branch_id
+                                  where ms.branch_mfo in (?1)
+                                  group by branch_mfo),
+                 kassa_stat as (select ms.branch_mfo                                        as mfo,
+                                       count(*)                                             as count,
+                                       sum(transaction_count)                               as transactionCount,
+                                       pg_catalog.floor(sum(transaction_debit) / 100000000) as transactionDebit
                                 from machines ms
-                                         left join branches bs on ms.branch_id = bs.id
-                                where ms.deleted = false
-                                  and bs.deleted = false
-                                  and mfo in (?1)
-                                group by mfo, model),
-                 counts as (select branch_mfo,
-                                   count(*)                                                                  as countt,
-                                   sum(case when machines.mcc in ('6010', '6012', '6050') then 1 else 0 end) as mcc_count
-                            from machines
-                            where machines.branch_mfo in (?1)
-                            group by branch_mfo)
-            select max(sd.name)                                                                         as name_and_mfo,
-                   max(sd.id)                                                                           as id,
-                   max(c.countt)                                                                        as count,
-                   sd.mfo                                                                               as mfo,
-                   sum(sd.transactionCount)                                                             as transactionCount,
-                   sum(sd.transactionDebit)                                                             as transactionDebit,
-                   max(c.mcc_count)                                                                     as cash_terminals,
-                   (select string_agg(soft || '/' || count, ' | ') from soft_data where mfo = sd.mfo)   as soft,
-                   (select string_agg(model || '/' || count, ' | ') from model_data where mfo = sd.mfo) as model
-            from soft_data sd
-                     inner join model_data md on sd.mfo = md.mfo
-                     inner join counts c on c.branch_mfo = sd.mfo
-            group by sd.mfo;
+                                where ms.branch_mfo in (?1)
+                                  and ms.mcc in ('6010', '6012', '6050')
+                                group by branch_mfo)
+                        
+            select g.name                                                 as name_and_mfo,
+                   g.id                                                   as id,
+                   g.mfo                                                  as mfo,
+                   array_to_string(
+                           ARRAY(
+                                   SELECT coalesce(m.soft ,'NULL')|| '/' || count(m)
+                                   FROM machines m
+                                   WHERE m.branch_mfo = g.mfo
+                                   GROUP BY m.soft
+                           ),
+                           ' | '
+                   )                                                      as soft,
+                   array_to_string(
+                           ARRAY(
+                                   SELECT m.model || '/' || count(m)
+                                   FROM machines m
+                                   WHERE m.branch_mfo = g.mfo
+                                   GROUP BY m.model
+                           ),
+                           ' | '
+                   )                                                      as model,
+                   g.count                                                as count,
+                   g.transactionCount                                     as transactionCount,
+                   g.transactionDebit                                     as transactionDebit,
+                   k.count                                                as cash_terminals,
+                   k.transactionDebit                                     as c_transaction_sum,
+                   k.transactionCount                                     as c_transaction_count,
+                   (g.count - coalesce(k.count, 0))                       as m_count,
+                   (g.transactionCount - coalesce(k.transactionCount, 0)) as m_transaction_count,
+                   (g.transactionDebit - coalesce(k.transactionDebit, 0)) as m_transaction_sum
+                        
+            from general_stat g
+                     left join kassa_stat k on k.mfo = g.mfo;
                            """;
 
     String GET_ALL_CHANGE_MACHINES_WITH_BANKS_CHOSEN = """
@@ -107,19 +117,20 @@ public interface ConstantQueries {
             """;
 
     String REPORT_QUERY_POS_MONITORING = """
-            with m as (select m.branch_mfo as   mfo,
+            with m as (select m.branch_mfo                                            as     mfo,
                               m.model,
                               m.sr_number,
                               m.soft,
                               m.terminal_id,
                               m.merchant_id,
                               m.merchant_name,
-                              (case when m.mcc in ('6050', '6010', '6012') then 1 else 0 end) kassa,
-                               (case when m.is_contract then 'HA' else 'YOQ'end ) as contract,
-                              (case when m.status =  'A' then 'ALIVE' else 'DEAD'end ) as status
+                              (case when m.mcc in ('6050', '6010', '6012') then 'kassa' end) as  kassa,
+                              (case when m.is_contract then 'BOR' else 'YOQ' end)     as     contract,
+                              (case when m.status = 'A' then 'ALIVE' else 'DEAD' end) as     status
                        from machines m),
                  t as (select t.terminal_id, t.merchant_id, sum(t.amount) as transaction_sum, sum(t.total) as transaction_count
                        from transaction_infos t
+                       where t.transactions_day between current_date - interval '1 month' and current_date
                        group by t.terminal_id, t.merchant_id)
             select m.*, t.transaction_count as transaction_count, t.transaction_sum / 100 as transaction_sum
             from m

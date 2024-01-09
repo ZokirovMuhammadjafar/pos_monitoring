@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -86,7 +87,7 @@ public class MachineServiceImpl implements MachineService {
                 logger.error("machinada xatolik === >>>  {}", machine.toString());
                 continue;
             }
-            machine.setPrefix(machine.getSrNumber().substring(0, 3));
+
             stateChoose(machine);
         }
     }
@@ -108,43 +109,29 @@ public class MachineServiceImpl implements MachineService {
                 logger.error("machinada xatolik ===>>>>  {} ", machine.toString());
                 continue;
             }
-            machine.setPrefix(machine.getSrNumber().substring(0, 3));
             stateChoose(machine);
         }
     }
 
 
     @Override
-    public void deleteByPrefix(String prefix) {
-        machineRepository.deleteByPrefix(prefix);
-    }
-
-    @Override
     public SingleResponse getStatistic(StatisticDto dto) {
         List<Map<String, Object>> statisticByMfos = machineRepository.getStatisticByMfos(dto.getMfos());
-        Calendar instance = Calendar.getInstance();
-        String today = TimeUtils.toYYYYmmDD(instance.getTime());
-        int workingCount = transactionInfoRepository.countAllByTodayAndMfoIn(today, dto.getMfos());
-        instance.add(Calendar.DAY_OF_YEAR, -1);
-        String yesterday = TimeUtils.toYYYYmmDD(instance.getTime());
-        Optional<Integer> transactionCount = transactionInfoRepository.sumAllCountByTodayAndMfoIn(yesterday, dto.getMfos());
-        Optional<Double> transactionAmount = transactionInfoRepository.sumAllAmountByTodayAndMfoIn(yesterday, dto.getMfos());
+        LocalDate yesterday = LocalDate.now().minusDays(2);
+        Map<String, Long> stats = transactionInfoRepository.sumAllStatAndMfoIn(dto.getMfos(), yesterday);
         Optional<Integer> allMcc = transactionInfoRepository.countAllMcc(dto.getMfos());
-
         Map<String, Long> map = new HashMap<>();
         map.put("allTerminal", 0L);
         map.put("notWorking", 0L);
         map.put("working", 0L);
         map.put("hasContractTerminal", 0L);
         for (Map<String, Object> objectMap : statisticByMfos) {
-            Short state = (Short) objectMap.get("state");
+            MachineState state = (MachineState) objectMap.get("state");
             Long number = (Long) objectMap.get("number");
-            convert(map, MachineState.values()[state], number);
+            convert(map, state, number);
         }
-        map.put("onCount", (long) workingCount);
-        map.put("offCount", (map.get("working") - workingCount));
-        transactionCount.ifPresent(integer -> map.put("transaction", integer.longValue()));
-        transactionAmount.ifPresent(integer -> map.put("transaction_sum", (long) (integer / 100_000_000)));
+        map.putAll(stats);
+        map.put("offCount", (map.get("working") - stats.get("onCount")));
         allMcc.ifPresent(integer -> map.put("kassa_terminals", integer.longValue()));
         return SingleResponse.of(map);
     }
@@ -154,15 +141,10 @@ public class MachineServiceImpl implements MachineService {
         if (filterDto.getMfos().isEmpty()) {
             throw new ValidatorException("MFOS_IS_NOT_COME");
         }
-        List<Map<String, String>> machinesByInstIdOrMfos = machineRepository.getbyMfoList(filterDto.getMfos());
-        int total = machinesByInstIdOrMfos.size();
+        List<Map<String, String>> machinesByInstIdOrMfos = machineRepository.getbyMfoList(filterDto.getMfos().stream().skip(filterDto.getPageNumber()/filterDto.getPageSize()).limit(filterDto.getPageSize()).toList());
         return ListResponse.of
                 (
-                        machinesByInstIdOrMfos
-                                .stream()
-                                .skip(filterDto.getPageNumber())
-                                .limit(filterDto.getPageSize())
-                                .collect(Collectors.toList()), total
+                        machinesByInstIdOrMfos, filterDto.getMfos().size()
                 );
     }
 

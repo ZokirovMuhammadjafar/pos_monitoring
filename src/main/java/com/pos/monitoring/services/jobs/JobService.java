@@ -60,7 +60,7 @@ public class JobService {
     }
 
     //o'ylab korish kerak 12 gacha update qilomasa nima bolarkan deb hozir ulguradi
-    @Scheduled(cron = "0 55 23 * * *")
+    @Scheduled(cron = "0 15 0 * * *")
     public void updateMachineAllTransactionStatus() {
         logger.info("---------------------begin update transactionStatus-------------------------------");
         machineService.updateAllMachineTransactionStatus(mfos);

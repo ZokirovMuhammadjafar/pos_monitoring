@@ -19,11 +19,7 @@ public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
 
     Machine findBySrNumberAndDeleted(String srNumber, boolean deleted);
 
-    @Modifying
-    @Query("update Machine m set m.deleted = true where m.prefix = ?1 ")
-    void deleteByPrefix(String prefix);
-
-    @Query(value = "select m.state as state, count(m.state) as number from machines m where m.branch_mfo in (?1) group by m.state", nativeQuery = true)
+    @Query(value = "select m.state as state, count(m.state) as number from Machine m where m.branchMfo in (?1)  group by m.state")
     List<Map<String, Object>> getStatisticByMfos(List<String> mfos);
 
     default List<Machine> getAllMachineForTransactionRequest(String mfo, Pageable pageable) {

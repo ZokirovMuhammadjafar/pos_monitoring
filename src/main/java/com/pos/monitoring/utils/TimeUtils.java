@@ -1,32 +1,34 @@
 package com.pos.monitoring.utils;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalField;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 public class TimeUtils {
 
-    private static final Calendar calendar = Calendar.getInstance();
-    private static final SimpleDateFormat FORMAT_YYYY_MM_DD = new SimpleDateFormat("yyyy-MM-dd");
+    // Formatter with the desired pattern
+    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+    private static DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    private static final String FROM_PREFIX = "T00:00:00";
-    private static final String TO_PREFIX = "T23:59:59";
-
-    public static String fromDate(Date from) {
-        return FORMAT_YYYY_MM_DD.format(from) + FROM_PREFIX;
+    public static String format(LocalDateTime from) {
+        return formatter.format(from);
     }
 
-    public static String toDate(Date from) {
-        return FORMAT_YYYY_MM_DD.format(from) + TO_PREFIX;
+    public static String format(LocalDate from) {
+        return dateFormat.format(from);
     }
 
-    public static Date minus(Date date, int param, int minus) {
-        calendar.setTime(date);
-        calendar.set(param, calendar.get(param) - minus);
-        return calendar.getTime();
-    }
-
-    public static String toYYYYmmDD(Date date) {
-        return FORMAT_YYYY_MM_DD.format(date);
+    public static Date yesterday() {
+        LocalDate localDate = LocalDate.now().minusDays(1);
+        // Convert LocalDate to Date
+        Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        return date;
     }
 }

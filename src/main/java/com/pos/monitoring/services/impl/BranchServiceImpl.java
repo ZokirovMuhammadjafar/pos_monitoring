@@ -37,15 +37,15 @@ public class BranchServiceImpl implements BranchService {
     }
 
     public Set<Branch> getBranches(List<String> branchFilterDtos,boolean withParent) {
-        if (branchFilterDtos.size() < 1) {
+        if (branchFilterDtos.isEmpty()) {
             throw new ValidatorException("parent not found");
         }
         Set<Branch> branches = branchRepository.findByMfoInAndDeletedFalse(branchFilterDtos);
-        if (branches.size()<1){
+        if (branches.isEmpty()){
             throw new ValidatorException("entity not found");
         }
         Set<Branch> first = branchRepository.findByBranchesDeletedFalse(branches);
-        if(first.size()<1){
+        if(first.isEmpty()){
             if(withParent){
                 first.addAll(branches);
                 return first;
@@ -66,7 +66,7 @@ public class BranchServiceImpl implements BranchService {
             throw new ValidatorException("PARENT_ENTITY_NOT_FOUND");
         }
         Set<Branch> secondChildsParent = branchRepository.findByBranchesDeletedFalse(parentBranchChilds);
-        if (secondChildsParent != null && secondChildsParent.size() > 0) {
+        if (secondChildsParent != null && !secondChildsParent.isEmpty()) {
             secondChildsParent.add(parent);
             return secondChildsParent.stream().toList();
         } else {

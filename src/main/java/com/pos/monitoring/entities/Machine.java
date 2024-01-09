@@ -10,6 +10,7 @@ import lombok.ToString;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Getter
@@ -29,25 +30,32 @@ public class Machine extends AbstractEntity {
     @JoinColumn(name = "branch_id")
     protected Branch branch;
     @Column
-    protected String branchMfo;
+    protected String branchMfo;//buni branch bilan join operationdan qutulish uchun yozilgan
+
     @Column
     protected String merchantId;
+
     @Column
     protected String terminalId;
+
     @Enumerated(value = EnumType.STRING)
-    protected Soft soft;
-    protected String model;
-    protected String prefix;
-    protected String merchantName;
+    protected Soft soft;   //teminal softi masalan uzpos ptp operation uchun
+    protected String model;//teminal modeli masalan pax-90 pax-920 s90
+    protected String merchantName;//dokonchi nomi
     protected String mcc;
-    protected Boolean isContract = false;//biz bilan kontract imzolaganmi yoqmi shuni aniqlash
     protected String status;//7003 status
+
     @Enumerated(value = EnumType.ORDINAL)
     protected MachineState state = MachineState.HAS_ERROR;
 
 
-    protected Boolean syncedTransaction =false;
+    protected Boolean syncedTransaction = false;
     protected Integer transactionCount;
     protected Double transactionDebit;
-    protected Date transactionDate;
+
+    @Column(columnDefinition = "bool default false")
+    protected boolean activeTransaction = false;
+
+    protected Boolean isContract = false;//biz bilan kontract imzolaganmi yoqmi shuni aniqlash
+
 }

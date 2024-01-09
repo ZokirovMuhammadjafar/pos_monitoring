@@ -12,9 +12,6 @@ public interface MachineService {
 
     void synchronizeDailyChangesWithBanksChosen(int i);
 
-    void deleteByPrefix(String prefix);
-
-
     SingleResponse getStatistic(StatisticDto dto);
 
     ListResponse getInformationByInstId(MachineFilterDto filterDto);

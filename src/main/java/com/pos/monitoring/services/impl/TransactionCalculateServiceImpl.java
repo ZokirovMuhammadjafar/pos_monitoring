@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -27,14 +28,15 @@ public class TransactionCalculateServiceImpl implements TransactionCalculateServ
         if (ObjectUtils.isEmpty(search.getMfos())) {
             throw new ValidatorException("DONT_COME_MFOS");
         }
-        Calendar calendar = Calendar.getInstance();
+        LocalDate toDate = LocalDate.now();
+        LocalDate fromDate;
         if (search.getCalculateType().equals(CalculateType.WEEKLY)) {
-            calendar.add(Calendar.WEEK_OF_YEAR, -1);
+            fromDate = toDate.minusWeeks(1);
         } else {
-            calendar.add(Calendar.MONTH, -1);
+            fromDate = toDate.minusMonths(1);
         }
 
-        List<TransactionCalculateDTO> allByTransactionFromToDate = transactionInfoRepository.getAllByTransactionFromToDate(calendar.getTime(), new Date(), search.getMfos())
+        return transactionInfoRepository.getAllByTransactionFromToDate(fromDate, toDate, search.getMfos())
                 .stream()
                 .map((a) -> {
                     TransactionCalculateDTO transactionCalculate = new TransactionCalculateDTO();
@@ -44,7 +46,7 @@ public class TransactionCalculateServiceImpl implements TransactionCalculateServ
                     transactionCalculate.setId(System.currentTimeMillis());
                     return transactionCalculate;
                 }).collect(Collectors.toList());
-        return allByTransactionFromToDate;
+
 
     }
 }
