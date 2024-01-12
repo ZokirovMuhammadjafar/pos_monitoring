@@ -17,7 +17,7 @@ import static com.pos.monitoring.repositories.system.specifications.ConstantQuer
 @Repository
 public interface MachineRepository extends SoftDeleteJpaRepository<Machine> {
 
-    Machine findBySrNumberAndDeleted(String srNumber, boolean deleted);
+    Machine findBySrNumber(String srNumber);
 
     @Query(value = "select m.state as state, count(m.state) as number from Machine m where m.branchMfo in (?1)  group by m.state")
     List<Map<String, Object>> getStatisticByMfos(List<String> mfos);

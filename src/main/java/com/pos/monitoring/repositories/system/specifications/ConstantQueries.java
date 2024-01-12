@@ -1,6 +1,7 @@
 package com.pos.monitoring.repositories.system.specifications;
 
 public interface ConstantQueries {
+
     String GET_ALL_CHANGE_MACHINES = """
             select t.*,
                    (case
@@ -11,12 +12,13 @@ public interface ConstantQueries {
                          m.terminal_id                                                                    as terminal_id,
                          m.merchant_id                                                                    as merchant_id,
                          m.soft                                                                           as soft,
-                         coalesce(m.mfo2,b.code)                                                          as branch_mfo,
+                          (case when length(coalesce(m.mfo2, b.code)) = 4 then '0' || coalesce(m.mfo2, b.code) else coalesce(m.mfo2, b.code) end)                                                         as branch_mfo,
                          b.id                                                                             as branch_id,
                          m.status7003                                                                     as status,
                          m.merchant_name                                                                  as merchant_name,
                          m.mcc                                                                            as mcc,
                          ml.name                                                                          as model,
+                         (case when m.state == 2 then true else false end)                                as deleted,
                          (case when length(b.bank_code) = 4 then '0' || b.bank_code else b.bank_code end) as inst_id
                   from (select *
                         from machine l
@@ -24,13 +26,12 @@ public interface ConstantQueries {
                           and l.type_id = 6
                           and (l.updated_date > current_date - interval '1 day' + interval '18 hour' or l.synced)
                           and l.model_id in (-2, -1, 840)
-                        order by l.machine_id
+                        order by l.id
                         offset ? limit 100) as m
                            inner join branch b on m.branch_id = b.id
                            inner join model ml on ml.id = m.model_id
                       and bank_code not in ('9006', '9004', '9002')) as t;
-                                                           """;
-
+                                                                       """;
     String GET_TABLE_BY_MFOS = """
             with general_stat as (select ms.branch_mfo                                        as mfo,
                                          count(*)                                             as count,
@@ -87,35 +88,35 @@ public interface ConstantQueries {
                            """;
 
     String GET_ALL_CHANGE_MACHINES_WITH_BANKS_CHOSEN = """
-             select t.*,
-                    (case
-                         when checker(inst_id := t.branch_mfo, sr_number := t.sr_number) is false
-                             then checker(inst_id := t.branch_mfo, sr_number := upper(t.sr_number))
-                         else true end) as is_contract
-             from (select m.sr_number                                                                      as sr_number,
-                          m.terminal_id                                                                    as terminal_id,
-                          m.merchant_id                                                                    as merchant_id,
-                          m.soft                                                                           as soft,
-                          coalesce(m.mfo2,b.code)                                                          as branch_mfo,
-                          b.id                                                                             as branch_id,
-                          m.status7003                                                                     as status,
-                          m.merchant_name                                                                  as merchant_name,
-                          m.mcc                                                                            as mcc,
-                          ml.name                                                                          as model,
-                          (case when length(b.bank_code) = 4 then '0' || b.bank_code else b.bank_code end) as inst_id
-                   from (select *
-                         from machine l
-                         where l.state <> 2
-                           and l.type_id = 6
-                           and (l.updated_date > current_date - interval '1 day' + interval '18 hour' or l.synced)
-                           and l.model_id in (-2, -1, 840)
-                         order by l.machine_id
-                         offset ? limit 100) as m
-                            inner join branch b on m.branch_id = b.id
-                            inner join model ml on ml.id = m.model_id
-                       and bank_code in ('9006', '9004', '9002')) as t;
+            select t.*,
+                   (case
+                        when checker(inst_id := t.branch_mfo, sr_number := t.sr_number) is false
+                            then checker(inst_id := t.branch_mfo, sr_number := upper(t.sr_number))
+                        else true end) as is_contract
+            from (select m.sr_number                                                                      as sr_number,
+                         m.terminal_id                                                                    as terminal_id,
+                         m.merchant_id                                                                    as merchant_id,
+                         m.soft                                                                           as soft,
+                         (case when length(coalesce(m.mfo2, b.code)) = 4 then '0' || coalesce(m.mfo2, b.code) else coalesce(m.mfo2, b.code) end)                                                         as branch_mfo,
+                         b.id                                                                             as branch_id,
+                         m.status7003                                                                     as status,
+                         m.merchant_name                                                                  as merchant_name,
+                         m.mcc                                                                            as mcc,
+                         ml.name                                                                          as model,
+                         (case when m.state == 2 then true else false end)                                as deleted,
+                         (case when length(b.bank_code) = 4 then '0' || b.bank_code else b.bank_code end) as inst_id
+                  from (select *
+                        from machine l
+                        where l.state <> 2
+                          and l.type_id = 6
+                          and (l.updated_date > current_date - interval '1 day' + interval '18 hour' or l.synced)
+                          and l.model_id in (-2, -1, 840)
+                        order by l.id
+                        offset ? limit 100) as m
+                           inner join branch b on m.branch_id = b.id
+                           inner join model ml on ml.id = m.model_id
+                      and bank_code in ('9006', '9004', '9002')) as t;
             """;
-
     String REPORT_QUERY_POS_MONITORING = """
             with m as (select m.branch_mfo                                            as     mfo,
                               m.model,

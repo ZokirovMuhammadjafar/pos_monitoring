@@ -87,7 +87,6 @@ public class MachineServiceImpl implements MachineService {
                 logger.error("machinada xatolik === >>>  {}", machine.toString());
                 continue;
             }
-
             stateChoose(machine);
         }
     }
@@ -117,7 +116,7 @@ public class MachineServiceImpl implements MachineService {
     @Override
     public SingleResponse getStatistic(StatisticDto dto) {
         List<Map<String, Object>> statisticByMfos = machineRepository.getStatisticByMfos(dto.getMfos());
-        LocalDate yesterday = LocalDate.now().minusDays(2);
+        LocalDate yesterday = LocalDate.now().minusDays(1);
         Map<String, Long> stats = transactionInfoRepository.sumAllStatAndMfoIn(dto.getMfos(), yesterday);
         Optional<Integer> allMcc = transactionInfoRepository.countAllMcc(dto.getMfos());
         Map<String, Long> map = new HashMap<>();
@@ -141,7 +140,7 @@ public class MachineServiceImpl implements MachineService {
         if (filterDto.getMfos().isEmpty()) {
             throw new ValidatorException("MFOS_IS_NOT_COME");
         }
-        List<Map<String, String>> machinesByInstIdOrMfos = machineRepository.getbyMfoList(filterDto.getMfos().stream().skip(filterDto.getPageNumber()/filterDto.getPageSize()).limit(filterDto.getPageSize()).toList());
+        List<Map<String, String>> machinesByInstIdOrMfos = machineRepository.getbyMfoList(filterDto.getMfos().stream().skip(filterDto.getPageNumber() / filterDto.getPageSize()).limit(filterDto.getPageSize()).toList());
         return ListResponse.of
                 (
                         machinesByInstIdOrMfos, filterDto.getMfos().size()
@@ -175,11 +174,16 @@ public class MachineServiceImpl implements MachineService {
     }
 
     private void stateChoose(Machine machine) {
-        Machine oldMachine = machineRepository.findBySrNumberAndDeleted(machine.getSrNumber(), false);
+        Machine oldMachine = machineRepository.findBySrNumber(machine.getSrNumber());
+
         if (oldMachine == null) {
             create(machine);
             machineRepository.saveAndFlush(machine);
         } else {
+            if (machine.isDeleted()) {
+                oldMachine.setDeleted(true);
+                return;
+            }
             if (!machine.getInstId().equals(oldMachine.getInstId())) {
                 oldMachine.setInstId(machine.getInstId());
             }
